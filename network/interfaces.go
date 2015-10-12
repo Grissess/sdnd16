@@ -36,6 +36,10 @@ type Attributed interface {
 	SetAttr(string, interface{})
 }
 
+const (
+	ATTR_NSROOT = "ns:"
+)
+
 type GraphMember interface {
 	GetGraph() *DsGraph
 }
@@ -73,4 +77,6 @@ type Graph interface {
 	NewNode(Label) (*DsNode, error)
 	GetOrCreateNode(Label) *DsNode
 	NewEdge(*DsNode, *DsNode) *DsEdge
+	RemoveEdge(*DsEdge)
+	RemoveNode(*DsNode)
 }

@@ -218,6 +218,44 @@ func (self *DsGraph) NewEdge(src *DsNode, dst *DsNode) (*DsEdge, error) {
 	return edgeref, nil;
 }
 
+func (self *DsGraph) RemoveEdge(edge *DsEdge) {
+	if edge == nil {
+		return;
+	}
+	if edge.graph != self {
+		return;
+	}
+	delete(edge.src.outgoing, edge.dst);
+	delete(edge.dst.incoming, edge.src);
+	for idx, elem := range(self.edges) {  // FIXME
+		if edge == &elem {
+			copy(self.edges[idx:len(self.edges)-1], self.edges[idx+1:]);
+			self.edges = self.edges[:len(self.edges)-1];
+			return;
+		}
+	}
+}
+
+func (self *DsGraph) RemoveNode(node *DsNode) {
+	if node == nil {
+		return;
+	}
+	if node.graph != self {
+		return;
+	}
+	for _, edge := range(node.GetEdges()) {
+		self.RemoveEdge(edge);  // FIXME
+	}
+	for idx, elem := range(self.nodes) {  // FIXME
+		if node == &elem {
+			copy(self.nodes[idx:len(self.nodes)-1], self.nodes[idx+1:]);
+			self.nodes = self.nodes[:len(self.nodes)-1];
+			return;
+		}
+	}
+}
+
+
 func NewGraph() DsGraph {
 	return DsGraph{edges: nil, nodes: nil, labels: make(map[Label]*DsNode), attrs: make(map[string]interface{})};
 }

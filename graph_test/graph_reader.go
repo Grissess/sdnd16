@@ -11,7 +11,7 @@ import(
 
 func main(){
 
-	f, err := os.Open("topology.txt")
+	f, _ := os.Open("topology.txt")
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
@@ -50,6 +50,10 @@ func main(){
 		e1.SetAttr("cost", weights[i]);
 		e2.SetAttr("cost", weights[i]);
 	}
-	fmt.Println(g);
+	fmt.Println(g.ToDot());
+
+	randnode := g.GetAllNodes()[0];
+	stree, _ := g.Search(randnode, func(edge *network.DsEdge) int {return edge.GetAttr("cost").(int);});
+	fmt.Println(stree.ToDot());
 
 }

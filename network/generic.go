@@ -5,6 +5,7 @@ package network;
 import (
 	"fmt"
 	"strings"
+	"container/heap"
 )
 
 func (self ErrNullPtr) Error() string {
@@ -36,7 +37,7 @@ func (self Label) String() string {
 }
 
 func (self DsNode) String() string {
-	return fmt.Sprintf("<Node %p '%s'>", &self, self.label);
+	return fmt.Sprintf("<Node %p '%s'> { %v }", &self, self.label, self.attrs);
 }
 
 func (self DsEdge) String() string {
@@ -58,6 +59,31 @@ func (self DsGraph) String() string {
 		strs[idx] = edge.String();
 		idx++;
 	}
+	return strings.Join(strs, "\n");
+}
+
+func (self DsNode) ToDot() string {
+	return fmt.Sprintf("\"%s { %v }\"", self.label, self.attrs);
+}
+
+func (self DsEdge) ToDot() string {
+	return fmt.Sprintf("%s -> %s [label=\"%v\"]", self.src.ToDot(), self.dst.ToDot(), self.attrs);
+}
+
+func (self DsGraph) ToDot() string {
+	strs := make([]string, len(self.edges)+len(self.nodes)+2);
+	idx := 0
+	strs[idx] = "digraph {";
+	idx++;
+	for _, node := range(self.nodes) {
+		strs[idx] = node.ToDot() + ";";
+		idx++;
+	}
+	for _, edge := range(self.edges) {
+		strs[idx] = edge.ToDot() + ";";
+		idx++;
+	}
+	strs[idx] = "}";
 	return strings.Join(strs, "\n");
 }
 
@@ -131,19 +157,76 @@ const (
 	srch_CLOSED = iota
 )
 
-/*
+const (
+	ATTR_NSSEARCH = ATTR_NSROOT+"srch:"
+	ATTR_NSDIST = ATTR_NSSEARCH+"dist"
+)
+
+type srchItem struct {
+	node *DsNode
+	dist int
+}
+
+type srchHeap []*DsNode;
+
+func (self srchHeap) Len() int { return len(self); }
+func (self srchHeap) Less(i, j int) bool { return self[i].GetAttr(ATTR_NSDIST).(int) < self[j].GetAttr(ATTR_NSDIST).(int); }
+func (self srchHeap) Swap(i, j int) { self[i], self[j] = self[j], self[i]; }
+func (self *srchHeap) Push(x interface{}) { *self = append(*self, x.(*DsNode)); }
+func (self *srchHeap) Pop() interface{} {
+	ret := (*self)[len(*self)-1];
+	*self = (*self)[:len(*self)-1];
+	return ret;
+}
+
 func (self *DsGraph) Search(start *DsNode, dist func(*DsEdge) int) (DsGraph, error) {
-	if start.graph != self {
-		return nil, ErrNotOwned{graph: self, member: start};
-	}
 	ret := NewGraph();
+	if start == nil {
+		return ret, ErrNullPtr("Search start");
+	}
+	if start.graph != self {
+		return ret, ErrNotOwned{graph: self, member: start};
+	}
+	_shp := srchHeap(make([]*DsNode, 0, len(self.nodes)));
+	shp := &_shp;
+	heap.Init(shp);
 	status := make(map[*DsNode]int);
 	nodes := self.GetAllNodes();
 	for _, node := range(nodes) {
-		status[node] = srch_UNVISITED;
+		status[ret.GetOrCreateNode(node.label)] = srch_UNVISITED;
 	}
-	status[start] = srch_OPEN;
+	newstart, _ := ret.GetNode(start.label);
+	newstart.SetAttr(ATTR_NSDIST, 0);
+	start.SetAttr(ATTR_NSDIST, 0);
+	heap.Push(shp, start);
+	for shp.Len() > 0 {
+		node := heap.Pop(shp).(*DsNode);
+		newnode := ret.GetOrCreateNode(node.label);
+		for _, edge := range(node.GetOutgoing()) {
+			dst := edge.GetDst();
+			newdst := ret.GetOrCreateNode(dst.label);
+			switch status[newdst] {
+			case srch_UNVISITED:
+				dst.SetAttr(ATTR_NSDIST, node.GetAttr(ATTR_NSDIST).(int) + dist(edge));
+				newdst.SetAttr(ATTR_NSDIST, node.GetAttr(ATTR_NSDIST).(int) + dist(edge));
+				ret.NewEdge(newnode, newdst);
+				heap.Push(shp, dst);
+				status[newdst] = srch_OPEN;
 
-	return ret,  nil
+			case srch_OPEN:
+				newdist := newnode.GetAttr(ATTR_NSDIST).(int) + dist(edge);
+				if newdist < newdst.GetAttr(ATTR_NSDIST).(int) {
+					dst.SetAttr(ATTR_NSDIST, newdist);
+					newdst.SetAttr(ATTR_NSDIST, newdist);
+					for _, edge := range(newdst.GetIncoming()) {
+						ret.RemoveEdge(edge);
+					}
+					ret.NewEdge(newnode, newdst);
+					heap.Init(shp);  // FIXME
+				}
+			}
+		}
+		status[newnode] = srch_CLOSED;
+	}
+	return ret, nil;
 }
-*/

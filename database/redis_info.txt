@@ -1,0 +1,16 @@
+CS350 Team 5 - shortest routes for a given network topology
+Iteration 2 - notes on using redis with go
+David Josephs and Killian Coddington
+
+- resources for using redis and go
+	to learn more about redis: try.redis.io
+	to get a quick overview of how to use redis with go: sendgrid.com/blog/get-going-go-redis
+	to learn more about the specifics of the go redis client: github.com/garyburd/redigo
+
+- how do we use redis?
+	we use redis' hashmap data structure to store information about a given network topology
+	after computing the shortest path between all pairs of nodes, each path (and its length) is stored in the hashmap by the key "s#:d#"
+		where s# means 's' followed by the number of the source node, and d# which means 'd' followed by the destination node number
+	paths are stored as a string in the format "s 1 2 3 ... d | l" where s and d are source and destination node numbers and 1 2 3 ...
+		indicates the path taken between the two, l is the length of this path (length being the sum of the weights of each edge)
+	all storage and retrieval of information at this point is accomplished through simple .Do calls with HSET and HGET   

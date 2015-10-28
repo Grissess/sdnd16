@@ -13,17 +13,77 @@ import (
 
 type DsPathData struct {
 	dsPaths [][]string
-	dsNodes int
+	dsNumNodes int
 }
 
-func NewPathData(nodes int) struct {
-	paths := make([][]string, nodes)
+func NewPathData(numNodes int) struct {
+	paths := make([][]string, numNodes)
 	for i := range paths {
-		paths[i] = make([]string, nodes)
+		paths[i] = make([]string, numNodes)
 	}
-	return DsPathData {dsPaths: paths, dsNodes: nodes}
+	return DsPathData {dsPaths: paths, dsNumNodes: numNodes}
 }
 
+func (self *DsPathData) SetPath(source int, destination int, path string) {
+	if source < self.dsNumNodes && destination < self.dsNumNodes && source >= 0 && destination >= 0
+		self.dsPaths[source][destination] = path
+}
+
+func (self *DsPathData) GetPaths() [][]string {
+	return self.dsPaths
+}
+
+func (self *DsPathData) GetPath(source int, destination int) string {
+	if source < self.dsNumNodes && destination < self.dsNumNodes && source >= 0 && destination >= 0
+		return self.dsPaths[source][destination]
+	else
+		return "invalid source and/or destination"
+}
+
+func (self *DsPathData) GetNumNodes() int {
+	return self.dsNumNodes
+}
+
+type DsTopologyData struct {
+	dsGraph []string
+	dsNumNodes int
+}
+
+func NewTopologyData(numNodes int) struct {
+	graph := make([]string, numNodes)
+	return DsTopologyData {dsGraph: graph, dsNumNodes: numNodes}
+}
+
+func (self *DsTopologyData) SetNodeNeighbors(node int, neighbors string) {
+	if node < self.dsNumNodes && node >= 0
+		self.dsGraph[node] = neighbors
+}
+
+func (self *DsTopologyData) GetNodeNeighbors(node int) string {
+	if node < self.dsNumNodes && node >= 0
+		return self.dsGraph[node]
+	else
+		return "invalide node"
+}
+
+type DsTopologyDatabase struct {
+	dsConnection Conn
+	dsPaths DsPathData
+	dsTopology DsTopologyData
+}
+
+func NewTopologyDatabase(numNodes int, network string, address string) struct {
+	db, err := redis.Dial(network, address)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	newTopology := NewTopologyData(numNodes)
+	newPaths := NewPathData(numNodes)
+	return DsTopologyDatabase{dsConnection: db, dsPaths: newPaths, dsTopology: newTopology}
+}
+
+/*
 	// connect to running redis server via TCP on port 6379
 	db, err := redis.Dial("tcp", ":6379")
 	if err != nil {
@@ -58,3 +118,4 @@ func NewPathData(nodes int) struct {
 	}
 
 }
+*/

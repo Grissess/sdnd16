@@ -11,111 +11,109 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-type DsPathData struct {
-	dsPaths [][]string
-	dsNumNodes int
+type PathsData struct {
+	paths []string
+	numNodes int
 }
 
-func NewPathData(numNodes int) struct {
-	paths := make([][]string, numNodes)
-	for i := range paths {
-		paths[i] = make([]string, numNodes)
+func NewPathsData(numberOfNodes int) PathsData {
+	return PathsData{paths: make([]string, numberOfNodes * numberOfNodes), numNodes: numberOfNodes}
+}
+
+func (self *PathsData) SetPath(source int, destination int, path string) {
+	if source < self.numNodes && destination < self.numNodes && source >= 0 && destination >= 0 {
+		self.paths[(source * self.numNodes) + destination] = path
 	}
-	return DsPathData {dsPaths: paths, dsNumNodes: numNodes}
 }
 
-func (self *DsPathData) SetPath(source int, destination int, path string) {
-	if source < self.dsNumNodes && destination < self.dsNumNodes && source >= 0 && destination >= 0
-		self.dsPaths[source][destination] = path
-}
-
-func (self *DsPathData) GetPaths() [][]string {
-	return self.dsPaths
-}
-
-func (self *DsPathData) GetPath(source int, destination int) string {
-	if source < self.dsNumNodes && destination < self.dsNumNodes && source >= 0 && destination >= 0
-		return self.dsPaths[source][destination]
-	else
+func (self *PathsData) GetPath(source int, destination int) string {
+	if source < self.numNodes && destination < self.numNodes && source >= 0 && destination >= 0 {
+		return self.paths[(source * self.numNodes) + destination]
+	} else {
 		return "invalid source and/or destination"
+	}
 }
 
-func (self *DsPathData) GetNumNodes() int {
-	return self.dsNumNodes
+func (self *PathsData) GetNumNodes() int {
+	return self.numNodes
 }
 
+/*
 type DsTopologyData struct {
-	dsGraph []string
-	dsNumNodes int
+	graph []string
+	numNodes int
 }
 
-func NewTopologyData(numNodes int) struct {
-	graph := make([]string, numNodes)
-	return DsTopologyData {dsGraph: graph, dsNumNodes: numNodes}
+func NewTopologyData(numberOfNodes int) DsTopologyData {
+	return DsTopologyData {graph: make([]string, (numberOfNodes * numberOfNodes)), numNodes: numberOfNodes}
 }
 
 func (self *DsTopologyData) SetNodeNeighbors(node int, neighbors string) {
-	if node < self.dsNumNodes && node >= 0
-		self.dsGraph[node] = neighbors
+	if node < self.numNodes && node >= 0 {
+		self.graph[node] = neighbors
+	}
 }
 
 func (self *DsTopologyData) GetNodeNeighbors(node int) string {
-	if node < self.dsNumNodes && node >= 0
-		return self.dsGraph[node]
-	else
+	if node < self.numNodes && node >= 0 {
+		return self.graph[node]
+	} else {
 		return "invalide node"
+	}
+}
+*/
+
+type RoutingDatabase struct {
+	name string
+	connection redis.Conn
+	paths PathsData
+//	topology DsTopologyData
+	connectionInitialized bool
+	numNodes int
 }
 
-type DsTopologyDatabase struct {
-	dsConnection Conn
-	dsPaths DsPathData
-	dsTopology DsTopologyData
+func NewRoutingDatabase(dbName string, numberOfNodes int) RoutingDatabase {
+	return RoutingDatabase{name: dbName, connection: nil, paths: NewPathsData(numberOfNodes), /*topology: NewTopologyData(numberOfNodes),*/ connectionInitialized: false, numNodes: numberOfNodes}
 }
 
-func NewTopologyDatabase(numNodes int, network string, address string) struct {
+func (self *RoutingDatabase) SetPath(source int, destination int, path string) {
+	self.paths.SetPath(source, destination, path)
+}
+
+func (self *RoutingDatabase) GetPath(source int, destination int) string {
+	return self.paths.GetPath(source, destination)
+}
+
+func (self *RoutingDatabase) Connect(network string, address string) {
 	db, err := redis.Dial(network, address)
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
-	newTopology := NewTopologyData(numNodes)
-	newPaths := NewPathData(numNodes)
-	return DsTopologyDatabase{dsConnection: db, dsPaths: newPaths, dsTopology: newTopology}
+	//defer db.Close() 
+	//idk what this does, probably a good idea to use but i need to research it further
+	self.connection = db
+	self.connectionInitialized = true
 }
 
-/*
-	// connect to running redis server via TCP on port 6379
-	db, err := redis.Dial("tcp", ":6379")
+func (self *RoutingDatabase) GetNumNodes() int {
+	return self.numNodes
+}
+
+func (self *RoutingDatabase) DBGetPath(source int, destination int) string {
+	if !self.connectionInitialized {
+		panic("attempting to request from uninitialized database")
+	}
+	path, err := redis.String(self.connection.Do("HGET", self.name, fmt.Sprintf("s%d:d%d", source, destination)))
 	if err != nil {
-		panic(err)
+		panic("key not found")
 	}
-	defer db.Close()
-
-	// loop through all stored path info and store in redis database in a hashmap
-	for i := range paths {
-		for j := range paths[i] {
-			db.Do("HSET", "paths", fmt.Sprintf("s%d:d%d", i, j), paths[i][j])
-		}
-	}
-
-	// variables for the source and destination nodes when asking for a path
-	var s, d int
-
-	// ask the user to specify valid source and destination nodes to retrieve the shortest path
-	for {
-		fmt.Print("enter the pair of nodes you want a path between (s, d) > ")
-		fmt.Scanf("(%d, %d)\n", &s, &d)
-		if s > n || s < 0 || d > n || d < 0 {
-			fmt.Printf("at least one specified node is not in the range 1 - %d\n", n)
-			continue
-		}
-
-		path, err := redis.String(db.Do("HGET", "paths", fmt.Sprintf("s%d:d%d", s, d)))
-		if err != nil {
-			fmt.Println("key not found")
-		}
-		fmt.Printf("the shortest path from %d to %d is: %s\n", s, d, path)
-	}
-
+	return path
 }
-*/
+
+func (self *RoutingDatabase) StorePathsData() {
+	for i := 0; i < self.numNodes; i++ {
+		for j := 0; j < self.numNodes; j++ {
+			self.connection.Do("HSET", self.name, fmt.Sprintf("s%d:d%d", i, j), self.paths.GetPath(i, j))
+		}
+	}
+}

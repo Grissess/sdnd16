@@ -1,0 +1,337 @@
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script type='text/javascript'>
+        document.ANALYSIS_DATA = ;
+        document.CALLGRAPH = ;
+        </script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "./database"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>
+A package developed to ease interaction between topology information and a redis database.
+</p>
+
+			</div>
+		</div>
+		
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+			
+				
+				<dd><a href="#PathsData">type PathsData</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewPathsData">func NewPathsData(numberOfNodes int) PathsData</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#PathsData.GetNumNodes">func (self *PathsData) GetNumNodes() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#PathsData.GetPath">func (self *PathsData) GetPath(source int, destination int) string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#PathsData.SetPath">func (self *PathsData) SetPath(source int, destination int, path string)</a></dd>
+				
+			
+				
+				<dd><a href="#RoutingDatabase">type RoutingDatabase</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewRoutingDatabase">func NewRoutingDatabase(dbName string, numberOfNodes int) RoutingDatabase</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#RoutingDatabase.Connect">func (self *RoutingDatabase) Connect(network string, address string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#RoutingDatabase.DBGetPath">func (self *RoutingDatabase) DBGetPath(source int, destination int) string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#RoutingDatabase.GetNumNodes">func (self *RoutingDatabase) GetNumNodes() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#RoutingDatabase.GetPath">func (self *RoutingDatabase) GetPath(source int, destination int) string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#RoutingDatabase.SetPath">func (self *RoutingDatabase) SetPath(source int, destination int, path string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#RoutingDatabase.StorePathsData">func (self *RoutingDatabase) StorePathsData()</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h4>Package files</h4>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="/src/pkg/target/model.go">model.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		<div id="pkg-callgraph" class="toggle" style="display: none">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Internal Call Graph section">Internal call graph ▹</h2>
+		</div> <!-- .expanded -->
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Internal Call Graph section">Internal call graph ▾</h2>
+                        <p>
+                          In the call graph viewer below, each node
+                          is a function belonging to this package
+                          and its children are the functions it
+                          calls&mdash;perhaps dynamically.
+                        </p>
+                        <p>
+                          The root nodes are the entry points of the
+                          package: functions that may be called from
+                          outside the package.  
+                          There may be non-exported or anonymous
+                          functions among them if they are called
+                          dynamically from another package.
+                        </p>
+                        <p>
+                          Click a node to visit that function's source code.
+                          From there you can visit its callers by
+                          clicking its declaring <code>func</code>
+                          token.
+                        </p>
+                        <p>
+                          Functions may be omitted if they were
+                          determined to be unreachable in the
+                          particular programs or tests that were
+                          analyzed.
+                        </p>
+                        <!-- Zero means show all package entry points. -->
+                        <ul style="margin-left: 0.5in" id="callgraph-0" class="treeview"></ul>
+                        </script>                        
+		</div>
+		</div> <!-- #pkg-callgraph -->
+
+		
+		
+		
+		
+			
+			
+			<h2 id="PathsData">type <a href="/src/pkg/target/model.go?s=397:452#L6">PathsData</a></h2>
+			<pre>type PathsData struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+			<p>
+Data structure to hold information about the paths between nodes in a topology.
+</p>
+
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewPathsData">func <a href="/src/pkg/target/model.go?s=551:597#L12">NewPathsData</a></h3>
+				<pre>func NewPathsData(numberOfNodes <a href="/pkg/builtin/#int">int</a>) <a href="#PathsData">PathsData</a></pre>
+				<p>
+Create a new PathsData structure with empty path information and a specified number of nodes.
+</p>
+
+				
+			        
+			
+
+			
+				
+				<h3 id="PathsData.GetNumNodes">func (*PathsData) <a href="/src/pkg/target/model.go?s=1421:1461#L33">GetNumNodes</a></h3>
+				<pre>func (self *<a href="#PathsData">PathsData</a>) GetNumNodes() <a href="/pkg/builtin/#int">int</a></pre>
+				<p>
+Return the number of nodes in a given topology PathsData is storing paths for.
+</p>
+
+				
+				
+			        
+			
+				
+				<h3 id="PathsData.GetPath">func (*PathsData) <a href="/src/pkg/target/model.go?s=1054:1120#L24">GetPath</a></h3>
+				<pre>func (self *<a href="#PathsData">PathsData</a>) GetPath(source <a href="/pkg/builtin/#int">int</a>, destination <a href="/pkg/builtin/#int">int</a>) <a href="/pkg/builtin/#string">string</a></pre>
+				<p>
+Get a specific path between source and destination nodes.
+</p>
+
+				
+				
+			        
+			
+				
+				<h3 id="PathsData.SetPath">func (*PathsData) <a href="/src/pkg/target/model.go?s=757:829#L17">SetPath</a></h3>
+				<pre>func (self *<a href="#PathsData">PathsData</a>) SetPath(source <a href="/pkg/builtin/#int">int</a>, destination <a href="/pkg/builtin/#int">int</a>, path <a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Set a specific path from source to destination nodes.
+</p>
+
+				
+				
+			        
+			
+		
+			
+			
+			<h2 id="RoutingDatabase">type <a href="/src/pkg/target/model.go?s=2258:2411#L64">RoutingDatabase</a></h2>
+			<pre>type RoutingDatabase struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+			<p>
+Structure devoted to storing a PathsData for a topology, as well as a connection to a redis database.
+Functions RoutingDatabase provides aim to ease storing a set of paths or a topology in a redis database.
+</p>
+
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewRoutingDatabase">func <a href="/src/pkg/target/model.go?s=2495:2568#L74">NewRoutingDatabase</a></h3>
+				<pre>func NewRoutingDatabase(dbName <a href="/pkg/builtin/#string">string</a>, numberOfNodes <a href="/pkg/builtin/#int">int</a>) <a href="#RoutingDatabase">RoutingDatabase</a></pre>
+				<p>
+Create a new routing database structure with a given name and number of nodes.
+</p>
+
+				
+			        
+			
+
+			
+				
+				<h3 id="RoutingDatabase.Connect">func (*RoutingDatabase) <a href="/src/pkg/target/model.go?s=3265:3333#L89">Connect</a></h3>
+				<pre>func (self *<a href="#RoutingDatabase">RoutingDatabase</a>) Connect(network <a href="/pkg/builtin/#string">string</a>, address <a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Connect to a redis database specified by a protocol (network) and address.
+</p>
+
+				
+				
+			        
+			
+				
+				<h3 id="RoutingDatabase.DBGetPath">func (*RoutingDatabase) <a href="/src/pkg/target/model.go?s=3802:3876#L106">DBGetPath</a></h3>
+				<pre>func (self *<a href="#RoutingDatabase">RoutingDatabase</a>) DBGetPath(source <a href="/pkg/builtin/#int">int</a>, destination <a href="/pkg/builtin/#int">int</a>) <a href="/pkg/builtin/#string">string</a></pre>
+				<p>
+Get path information for a specific path from a redis database. (remote)
+</p>
+
+				
+				
+			        
+			
+				
+				<h3 id="RoutingDatabase.GetNumNodes">func (*RoutingDatabase) <a href="/src/pkg/target/model.go?s=3651:3697#L101">GetNumNodes</a></h3>
+				<pre>func (self *<a href="#RoutingDatabase">RoutingDatabase</a>) GetNumNodes() <a href="/pkg/builtin/#int">int</a></pre>
+				<p>
+Get the number of nodes for the topology a RoutingDatabase respresents.
+</p>
+
+				
+				
+			        
+			
+				
+				<h3 id="RoutingDatabase.GetPath">func (*RoutingDatabase) <a href="/src/pkg/target/model.go?s=3061:3133#L84">GetPath</a></h3>
+				<pre>func (self *<a href="#RoutingDatabase">RoutingDatabase</a>) GetPath(source <a href="/pkg/builtin/#int">int</a>, destination <a href="/pkg/builtin/#int">int</a>) <a href="/pkg/builtin/#string">string</a></pre>
+				<p>
+Get a path from a RoutingDatabase&#39;s corresponding PathsData structure. (local)
+</p>
+
+				
+				
+			        
+			
+				
+				<h3 id="RoutingDatabase.SetPath">func (*RoutingDatabase) <a href="/src/pkg/target/model.go?s=2848:2926#L79">SetPath</a></h3>
+				<pre>func (self *<a href="#RoutingDatabase">RoutingDatabase</a>) SetPath(source <a href="/pkg/builtin/#int">int</a>, destination <a href="/pkg/builtin/#int">int</a>, path <a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Set a path in the RoutingDatabase&#39;s corresponding PathsData structure. (local)
+</p>
+
+				
+				
+			        
+			
+				
+				<h3 id="RoutingDatabase.StorePathsData">func (*RoutingDatabase) <a href="/src/pkg/target/model.go?s=4220:4265#L118">StorePathsData</a></h3>
+				<pre>func (self *<a href="#RoutingDatabase">RoutingDatabase</a>) StorePathsData()</pre>
+				<p>
+Store all local PathsData information to a redis database. (remote)
+</p>
+
+				
+				
+			        
+			
+		
+	
+
+	
+
+
+
+
+

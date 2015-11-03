@@ -151,8 +151,8 @@ func (self *DsGraph) SetAttr(attr string, val interface{}) {
 
 func (self *DsGraph) GetAllNodes() []*DsNode {
 	ret := make([]*DsNode, len(self.nodes));
-	for idx, node := range(self.nodes) {
-		ret[idx] = &node;
+	for idx := range(self.nodes) {
+		ret[idx] = &(self.nodes[idx]);
 	}
 	return ret;
 }

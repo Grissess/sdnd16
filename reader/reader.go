@@ -3,7 +3,6 @@ package reader
 import(
 	"bufio"
 	"os"
-        "fmt"
 	"github.com/Grissess/sdnd16/network"
 )
 
@@ -48,12 +47,11 @@ func ReadFile(filename string) network.DsGraph{
         return g;
 }
 
-func LabelList(g network.DsGraph) []string{
+func LabelList(g *network.DsGraph) []string{
         nodes:= g.GetAllNodes()
 
         var node_labels []string
         for i:= 0 ; i < len(nodes); i=i + 1{
-                fmt.Println(nodes[i].String());
                 node_labels = append(node_labels, nodes[i].GetLabel().String());
         }
 

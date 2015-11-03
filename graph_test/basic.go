@@ -11,10 +11,5 @@ func main(){
         g= reader.ReadFile("topology.txt");
 
         fmt.Print(g.String());
-        fmt.Println();
-
-        node_labels := reader.LabelList(g);
-        for i:= 0; i< len(node_labels); i = i + 1 {
-                fmt.Println(node_labels[i]);
-        }
+        fmt.Println()
 }

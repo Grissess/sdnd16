@@ -67,6 +67,10 @@ func (self *DsNode) GetGraph() *DsGraph {
 	return self.graph;
 }
 
+func (self *DsNode) GetLabel() Label {
+        return self.label;
+}
+
 func (self *DsNode) GetAttr(attr string) interface{} {
 	return self.attrs[attr];
 }

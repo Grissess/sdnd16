@@ -2,7 +2,6 @@ package reader
 
 import(
 	"bufio"
-	"fmt"
 	"os"
 	"github.com/Grissess/sdnd16/network"
 )
@@ -38,8 +37,8 @@ func ReadFile(filename string) network.DsGraph{
 	g := network.NewGraph();
 
 	for i = 0; i<len(srcs); i= i +1{
-		s := g.GetOrCreateNode(network.Label(fmt.Sprintf("%d", srcs[i])))
-		d := g.GetOrCreateNode(network.Label(fmt.Sprintf("%d", dests[i])))
+		s := g.GetOrCreateNode(network.Label( srcs[i]))
+		d := g.GetOrCreateNode(network.Label( dests[i]))
 		e1, _ := g.NewEdge(s,d);
 		e2, _ := g.NewEdge(d,s);
 		e1.SetAttr("cost", weights[i]);
@@ -47,4 +46,18 @@ func ReadFile(filename string) network.DsGraph{
 	}
 
         return g;
+}
+
+func LabelList(g network.DsGraph) []string{
+        var nodes []* network.DsNode
+        nodes = g.GetAllNodes()
+
+        var node_labels []string
+        var i int
+        for i = 0 ; i < len(nodes); i=i + 1{
+                val:= nodes[i].GetLabel()
+                node_labels = append(node_labels, string(val));
+        }
+
+        return node_labels;
 }

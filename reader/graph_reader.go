@@ -17,7 +17,7 @@ func ReadFile(filename string) network.DsGraph{
 	var result []string;
 
 	for scanner.Scan(){
-		x:= scanner.Text()
+		x := scanner.Text()
 		result = append(result, x);
 	}
 

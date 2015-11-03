@@ -101,7 +101,7 @@ func (self *RoutingDatabase) Connect(network string, address string) {
 	if err != nil {
 		panic(err)
 	}
-	//defer db.Close() 
+	defer db.Close()
 	//idk what this does, probably a good idea to use but i need to research it further
 	self.connection = db
 	self.connectionInitialized = true

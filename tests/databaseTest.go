@@ -1,6 +1,6 @@
 /*
  * CS350 Team 5 - shortests route for a given network topology
- * Iteration 2 - graph data storage
+ * Iteration 3 - graph data storage
  * David Josephs and Killian Coddington
  */
 
@@ -16,7 +16,8 @@ func main() {
 	numberOfNodes := 3
 
 	rdb := database.NewRoutingDatabase("test", numberOfNodes)
-	rdb.Connect("tcp", ":6379")
+	rdb.Connect("tcp", "128.153.144.171:6379") // this ip address is that of a virtual machine hosted on
+                                               // phoenix at cosi
 
 	for i := 0; i < numberOfNodes; i++ {
 		for j := 0; j < numberOfNodes; j++ {

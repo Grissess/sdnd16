@@ -3,6 +3,7 @@ package reader
 import(
 	"bufio"
 	"os"
+        "fmt"
 	"github.com/Grissess/sdnd16/network"
 )
 
@@ -21,22 +22,21 @@ func ReadFile(filename string) network.DsGraph{
 	}
 
 	var srcs, dests, weights []string
-	var i int
 
-	for i =0 ; i < len(result); i= i+3{
+	for i:=0 ; i < len(result); i= i+3{
 		srcs = append(srcs,result[i]);
 	}
-	for i =1; i < len(result); i= i+3{
+	for i:=1; i < len(result); i= i+3{
 		dests = append(dests, result[i]);
 	}
 
-	for i = 2; i< len(result); i = i+3{
+	for i:= 2; i< len(result); i = i+3{
 		weights = append(weights, result[i]);
 	}
 
 	g := network.NewGraph();
 
-	for i = 0; i<len(srcs); i= i +1{
+	for i:= 0; i<len(srcs); i= i +1{
 		s := g.GetOrCreateNode(network.Label( srcs[i]))
 		d := g.GetOrCreateNode(network.Label( dests[i]))
 		e1, _ := g.NewEdge(s,d);
@@ -49,14 +49,12 @@ func ReadFile(filename string) network.DsGraph{
 }
 
 func LabelList(g network.DsGraph) []string{
-        var nodes []* network.DsNode
-        nodes = g.GetAllNodes()
+        nodes:= g.GetAllNodes()
 
         var node_labels []string
-        var i int
-        for i = 0 ; i < len(nodes); i=i + 1{
-                val:= nodes[i].GetLabel()
-                node_labels = append(node_labels, string(val));
+        for i:= 0 ; i < len(nodes); i=i + 1{
+                fmt.Println(nodes[i].String());
+                node_labels = append(node_labels, nodes[i].GetLabel().String());
         }
 
         return node_labels;

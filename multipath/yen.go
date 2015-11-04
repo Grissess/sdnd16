@@ -6,6 +6,7 @@ package multipath
 import (
 	"sort"
 	"fmt"
+	"strings"
 	"github.com/gyuho/goraph/graph"
 )
 
@@ -76,6 +77,29 @@ func copyGraph(grph graph.Graph) graph.Graph {
 		}
 	}
 	return ret;
+}
+
+func ToDot(grph graph.Graph, directed bool) string {
+	lines := make([]string, 0);
+	var sep string;
+	if directed {
+		lines = append(lines, "digraph {");
+		sep = "->";
+	} else {
+		lines = append(lines, "strict graph {");
+		sep = "--";
+	}
+	nodes := grph.GetVertices();
+	for node, _ := range(nodes) {
+		lines = append(lines, fmt.Sprintf("\"%s\"", node));
+		children, _ := grph.GetChildren(node);
+		for child, _ := range(children) {
+			weight, _ := grph.GetWeight(node, child);
+			lines = append(lines, fmt.Sprintf("\"%s\" %s \"%s\" [label=\"%f\"]", node, sep, child, weight));
+		}
+	}
+	lines = append(lines, "}");
+	return strings.Join(lines, "\n");
 }
 
 func Yen(_grph graph.Graph, source, sink string, K int) [][]string {

@@ -11,6 +11,7 @@ func main(){
         var g *graph.DefaultGraph
         g, _ = reader.ReadFileToGraph("topology.txt")
         fmt.Println(g.String())
+		fmt.Println(multipath.ToDot(g, false));
 
 		paths := multipath.Yen(g, "1", "5", 5);
         fmt.Println(paths)

@@ -1,159 +1,96 @@
+//The test client for this project, allows for storage and retrieval of information
 package main
 
 import (
 	"fmt"
 	"github.com/Grissess/sdnd16/database"
-	"github.com/Grissess/sdnd16/network"
 	"github.com/Grissess/sdnd16/reader"
-	"os"
+	"github.com/gyuho/goraph/graph"
+	"strings"
 )
 
 func main() {
 
-	done := 1
 	var filename string
 	var address string
 	var name string
 	var nodeLabels []string
-	var topology *network.DsGraph
+	var topology *graph.DefaultGraph
+	var fileErr error
 
-	if len(os.Args) == 1 {
-		var start string
-		fmt.Print("grab or store? > ")
-		fmt.Scanln(&start)
+	var start string
+	fmt.Print("grab or store? > ")
+	fmt.Scanln(&start)
 
-		if start == "store" {
+	if start == "store" {
 
-			fmt.Print("enter topology filename > ")
-			fmt.Scanln(&filename)
-			fmt.Print("enter topology name > ")
-			fmt.Scanln(&name)
-			fmt.Print("enter address and port of database > ")
-			fmt.Scanln(&address)
+		fmt.Print("enter topology filename > ")
+		fmt.Scanln(&filename)
+		fmt.Print("enter topology name > ")
+		fmt.Scanln(&name)
+		fmt.Print("enter address and port of database > ")
+		fmt.Scanln(&address)
 
-			if address == "" {
-				fmt.Println("- no address specified, using default database")
-				address = "128.153.144.171:6379"
-			}
-
-			topology = reader.ReadFile(filename)
-			nodeLabels = reader.LabelList(topology)
-			numberOfNodes := len(nodeLabels)
-
-			rdb := database.NewRoutingDatabase(name, numberOfNodes)
-			fmt.Println("Connecting to data base")
-			err := rdb.Connect("tcp", address)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println("Connected")
-
-			fmt.Println("Setting paths")
-			rdb.SetTrivialPaths()
-			fmt.Println("Paths set, storing paths")
-
-			for i := 0; i < numberOfNodes; i++ {
-				for j := 0; j < numberOfNodes; j++ {
-					if i != j {
-						rdb.SetPath(i, j, fmt.Sprintf("%d %d | %d", i, j, i+j))
-					}
-				}
-			}
-			rdb.StorePathsInDB()
-			fmt.Println("Paths stored in data base")
-		} else if start == "grab" {
-			fmt.Print("enter address and port of database > ")
-			fmt.Scanln(&address)
-
-			if address == "" {
-				fmt.Println("- no address specified, using default database")
-				address = "128.153.144.171:6379"
-			}
-
-			err := rdb.Connect("tcp", address)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println("Connected")
-
-		} else {
-			fmt.Println("invalid input program terminated")
+		if address == "" {
+			fmt.Println("- no address specified, using default database")
+			address = "128.153.144.171:6379"
 		}
 
-	} else if len(os.Args) == 3 {
-		fmt.Println("using", os.Args[1], "creating a topology named", os.Args[2], "using default database")
+		topology, fileErr = reader.ReadFileToGraph(filename)
 
-		topology = reader.ReadFile(os.Args[1])
-		nodeLabels = reader.LabelList(topology)
+		if fileErr != nil {
+			panic(fileErr)
+		}
+		nodeLabels = reader.GetLabelList(topology)
 		numberOfNodes := len(nodeLabels)
+		labelMap := reader.GetLabelMap(topology)
 
-		rdb := database.NewRoutingDatabase(os.Args[2], numberOfNodes)
+		rdb, err := database.NewRoutingDatabase(name, "tcp", address, labelMap)
 		fmt.Println("Connecting to data base")
-		err := rdb.Connect("tcp", "128.153.144.171:6379")
+
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println("Connected")
+
 		fmt.Println("Setting paths")
 
-		rdb.SetTrivialPaths()
-		fmt.Println("Paths set, storing paths")
+		var src, dest string
+
 		for i := 0; i < numberOfNodes; i++ {
 			for j := 0; j < numberOfNodes; j++ {
 				if i != j {
-					rdb.SetPath(i, j, fmt.Sprintf("%d %d | %d", i, j, i+j))
+					src = nodeLabels[i]
+					dest = nodeLabels[j]
+					paths, distance, _ := graph.Dijkstra(topology, src, dest)
+					path := strings.Join(paths[1:], " ")
+					rdb.SetPath(src, dest, fmt.Sprintf("%s %s | %d", src, path, int(distance[dest])))
 				}
 			}
 		}
+
+		fmt.Println("Paths set, storing paths")
 		rdb.StorePathsInDB()
 		fmt.Println("Paths stored in data base")
+		rdb.Disconnect()
 
-	} else if len(os.Args) == 4 {
-		fmt.Println("using", os.Args[1], "creating a topology named", os.Args[2], "using the database at", os.Args[3])
+	} else if start == "grab" {
+		fmt.Print("enter address and port of database > ")
+		fmt.Scanln(&address)
 
-		topology = reader.ReadFile(os.Args[1])
-		nodeLabels = reader.LabelList(topology)
-		numberOfNodes := len(nodeLabels)
-
-		rdb := database.NewRoutingDatabase(os.Args[2], numberOfNodes)
-		fmt.Println("Connecting to data base")
-		err := rdb.Connect("tcp", os.Args[3])
-		if err != nil {
-			panic(err)
+		if address == "" {
+			fmt.Println("- no address specified, using default database")
+			address = "128.153.144.171:6379"
 		}
+
+		/*		err := rdb.Connect("tcp", address)
+				if err != nil {
+					panic(err)
+				}*/
 		fmt.Println("Connected")
-		fmt.Println("Setting paths")
-
-		rdb.SetTrivialPaths()
-		fmt.Println("Paths set, storing paths")
-		for i := 0; i < numberOfNodes; i++ {
-			for j := 0; j < numberOfNodes; j++ {
-				if i != j {
-					rdb.SetPath(i, j, fmt.Sprintf("%d %d | %d", i, j, i+j))
-				}
-			}
-		}
-		rdb.StorePathsInDB()
-		fmt.Println("Paths stored in data base")
 
 	} else {
-		fmt.Println("Invalid input program Terminated")
-		done = 0
+		fmt.Println("invalid input program terminated")
 	}
-	var answer string
-	for !(done == 0) {
-		var start int
-		var end int
-		fmt.Print("what is your starting node? > ")
-		fmt.Scanln(&start)
-		fmt.Print("what is your ending node? > ")
-		fmt.Scanln(&end)
-		fmt.Println("first path is")
-		fmt.Println("second path is")
-		fmt.Print("enter q to quit")
-		fmt.Scanln(&answer)
-		if answer == "q" {
-			done = 0
-		}
-	}
+
 }

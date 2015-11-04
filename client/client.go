@@ -42,11 +42,11 @@ func main() {
 			panic(err)
 		}
 		fmt.Println("Connected")
-		
-				fmt.Println("Setting paths")
+
+		fmt.Println("Setting paths")
 		rdb.SetTrivialPaths()
 		fmt.Println("Paths set, storing paths")
-		
+
 		for i := 0; i < numberOfNodes; i++ {
 			for j := 0; j < numberOfNodes; j++ {
 				if i != j {
@@ -55,26 +55,26 @@ func main() {
 			}
 		}
 		rdb.StorePathsInDB()
-				fmt.Println("Paths stored in data base")
+		fmt.Println("Paths stored in data base")
 
 	} else if len(os.Args) == 3 {
-		fmt.Println("using", os.Args[1],"creating a topology named",os.Args[2], "using default database")
+		fmt.Println("using", os.Args[1], "creating a topology named", os.Args[2], "using default database")
 
 		topology = reader.ReadFile(os.Args[1])
 		nodeLabels = reader.LabelList(topology)
 		numberOfNodes := len(nodeLabels)
-		
+
 		rdb := database.NewRoutingDatabase(os.Args[2], numberOfNodes)
 		fmt.Println("Connecting to data base")
 		err := rdb.Connect("tcp", "128.153.144.171:6379")
 		if err != nil {
 			panic(err)
-		}		
-			fmt.Println("Connected")
-				fmt.Println("Setting paths")
+		}
+		fmt.Println("Connected")
+		fmt.Println("Setting paths")
 
 		rdb.SetTrivialPaths()
-				fmt.Println("Paths set, storing paths")
+		fmt.Println("Paths set, storing paths")
 		for i := 0; i < numberOfNodes; i++ {
 			for j := 0; j < numberOfNodes; j++ {
 				if i != j {
@@ -83,11 +83,10 @@ func main() {
 			}
 		}
 		rdb.StorePathsInDB()
-			fmt.Println("Paths stored in data base")
-
+		fmt.Println("Paths stored in data base")
 
 	} else if len(os.Args) == 4 {
-				fmt.Println("using", os.Args[1],"creating a topology named", os.Args[2], "using the database at", os.Args[3])
+		fmt.Println("using", os.Args[1], "creating a topology named", os.Args[2], "using the database at", os.Args[3])
 
 		topology = reader.ReadFile(os.Args[1])
 		nodeLabels = reader.LabelList(topology)
@@ -99,8 +98,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-					fmt.Println("Connected")
-				fmt.Println("Setting paths")
+		fmt.Println("Connected")
+		fmt.Println("Setting paths")
 
 		rdb.SetTrivialPaths()
 		fmt.Println("Paths set, storing paths")

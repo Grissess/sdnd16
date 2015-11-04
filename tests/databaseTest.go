@@ -19,11 +19,9 @@ func main() {
     labelMap["alpha"] = 0
     labelMap["bravo"] = 1
     labelMap["charlie"] = 2
+    labelMap["delta"] = 3
 
-	rdb := database.NewRoutingDatabase("NATO")
-    rdb.SetLabels(labelMap)
-
-    err := rdb.Connect("tcp", address)
+	rdb, err := database.NewRoutingDatabase("NATO", "tcp", address, labelMap)
     if err != nil {
         panic(err)
     }

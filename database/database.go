@@ -87,8 +87,26 @@ type RoutingDatabase struct {
 }
 
 // Create a new routing database structure with a given name and number of nodes.
-func NewRoutingDatabase(dbName string) RoutingDatabase {
-    return RoutingDatabase{name: dbName, connection: nil, paths: NewPaths(0), labels: make(map[string]int), labelsInitialized: false, connectionInitialized: false, numNodes: -1}
+func NewRoutingDatabase(dbName string, network string, address string, nodeLabels map[string]int) (RoutingDatabase, error) {
+    rdb := RoutingDatabase{name: dbName, connection: nil, paths: NewPaths(0), labels: make(map[string]int), labelsInitialized: false, connectionInitialized: false, numNodes: -1}
+    err := rdb.Connect(network, address)
+    if err != nil {
+        return rdb, err
+    }
+    rdb.SetLabels(nodeLabels)
+    rdb.SetTrivialPaths()
+    return rdb, nil
+}
+
+func NewRoutingDatabaseFromDB(dbName string, network string, address string) (RoutingDatabase, error) {
+    rdb := RoutingDatabase{name: dbName, connection: nil, paths: NewPaths(0), labels: make(map[string]int), labelsInitialized: false, connectionInitialized: false, numNodes: -1}
+    err := rdb.Connect(network, address)
+    if err != nil {
+        return rdb, err
+    }
+    rdb.GetLabelsFromDB()
+    rdb.SetTrivialPaths()
+    return rdb, nil
 }
 
 func (self *RoutingDatabase) SetLabels(nodeLabels map[string]int) {
@@ -100,6 +118,9 @@ func (self *RoutingDatabase) SetLabels(nodeLabels map[string]int) {
 
 // Set a path in the RoutingDatabase's corresponding Paths structure. (local)
 func (self *RoutingDatabase) SetPath(source string, destination string, path string) error {
+    if !self.labelsInitialized {
+        return errors.New("RoutingDatabase: no labels for topology")
+    }
     s, okSource := self.labels[source]
     d, okDestination := self.labels[destination]
     if okSource && okDestination {
@@ -118,6 +139,9 @@ func (self *RoutingDatabase) SetPath(source string, destination string, path str
 
 // Get a path from a RoutingDatabase's corresponding Paths structure. (local)
 func (self *RoutingDatabase) GetPath(source string, destination string) (string, error) {
+    if !self.labelsInitialized {
+        return uninitializedPath, errors.New("RoutingDatabase: no labels for topology")
+    }
     s, okSource := self.labels[source]
     d, okDestination := self.labels[destination]
     if okSource && okDestination {
@@ -165,6 +189,9 @@ func (self *RoutingDatabase) GetPathFromDB(source string, destination string) (s
     if !self.connectionInitialized {
         return uninitializedPath, errors.New("RoutingDatabase: no initialized connection to get path from")
     }
+    if !self.labelsInitialized {
+        return uninitializedPath, errors.New("RoutingDatabase: no labels for topology")
+    }
     s, okSource := self.labels[source]
     d, okDestination := self.labels[destination]
     if okSource && okDestination {
@@ -206,12 +233,16 @@ func (self *RoutingDatabase) GetLabelsFromDB() error {
         self.connection.Do("HSET", self.name, fmt.Sprintf("L:%d", i), nodeLabel)
         self.labels[nodeLabel] = i
     }
+    self.labelsInitialized = true
     return nil
 }
 
 func (self *RoutingDatabase) StoreLabelsInDB() error {
     if !self.connectionInitialized {
         return errors.New("RoutingDatabase: no connected database to store paths in")
+    }
+    if !self.labelsInitialized {
+        return errors.New("RoutingDatabase: no labels for topology")
     }
     self.connection.Do("HSET", self.name, "L:SIZE", fmt.Sprintf("%d", len(self.labels)))
     for key, index := range self.labels {
@@ -224,6 +255,9 @@ func (self *RoutingDatabase) StoreLabelsInDB() error {
 func (self *RoutingDatabase) StorePathsInDB() error {
     if !self.connectionInitialized {
         return errors.New("RoutingDatabase: no connected database to store paths in")
+    }
+    if !self.labelsInitialized {
+        return errors.New("RoutingDatabase: no labels for topology")
     }
     uninitializedPaths := 0
     for _, i := range self.labels {

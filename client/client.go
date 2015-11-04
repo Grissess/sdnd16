@@ -3,8 +3,8 @@ package main
 
 import (
         "fmt"
-	"github.com/Grissess/sdnd16/database"
-	"github.com/Grissess/sdnd16/reader"
+	"../database"
+	"../reader"
 	"github.com/gyuho/goraph/graph"
 	"strings"
 )
@@ -84,7 +84,7 @@ func main() {
 			address = "128.153.144.171:6379"
 		}
                 rdb,err := database.NewRoutingDatabaseFromDB(name, "tcp", address)
-		if err != nil {
+                if err != nil {
 			panic(err)
 		}
 		fmt.Println("Connected")

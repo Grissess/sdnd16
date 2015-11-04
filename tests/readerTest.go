@@ -9,6 +9,7 @@ import(
 func main(){
         var g *graph.DefaultGraph
         g, _ = reader.ReadFileToGraph("topology.txt")
+        g = reader.ReadFile("topology.txt")
         fmt.Print(g.String())
 
         labels := reader.GetLabelList(g)

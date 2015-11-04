@@ -9,15 +9,14 @@ package reader
 
 import (
 	"bufio"
-	"github.com/Grissess/sdnd16/network"
+	"github.com/gyuho/goraph/graph"
 	"os"
         "log"
 	"strconv"
-	"fmt"
 )
 
 //Reads in a topology file with the structure src,dst,weight for every edge
-func ReadFile(filename string) *network.DsGraph{
+func ReadFile(filename string) *graph.DefaultGraph {
 
 	f, err := os.Open(filename)
 
@@ -47,34 +46,27 @@ func ReadFile(filename string) *network.DsGraph{
 		weights = append(weights, result[i])
 	}
 
-	g := network.NewGraph()
+	g := graph.NewDefaultGraph()
 
 	for i := 0; i < len(srcs); i = i + 1 {
-		s := g.GetOrCreateNode(network.Label(srcs[i]))
-		d := g.GetOrCreateNode(network.Label(dests[i]))
-		e1, err1 := g.NewEdge(s,d);
-		e2, err2 := g.NewEdge(d,s);
-		if err1 != nil {
-			fmt.Printf("// ERROR: Creating edge: %s", err1);
-		}
-		if err2 != nil {
-			fmt.Printf("// ERROR: Creating edge: %s", err2);
-		}
+	        g.AddVertex(srcs[i]);
+		g.AddVertex(dests[i]);
+
 		cost, _ := strconv.Atoi(weights[i]);
-		e1.SetAttr("cost", cost);
-		e2.SetAttr("cost", cost);
+
+		g.AddEdge(srcs[i], dests[i], float64(cost));
+		g.AddEdge(dests[i], srcs[i], float64(cost));
 	}
 
 	return g;
 }
 
 //Returns an array of strings containing the labels of all nodes in the graph.
-func LabelList(g *network.DsGraph) map[string]int {
-	nodes := g.GetAllNodes()
+func LabelList(g *graph.DefaultGraph) map[string]int {
+	nodes := g.GetVertices()
 
 	var node_labels map[string]int
 	for i := 0; i < len(nodes); i = i + 1 {
-		node_labels[nodes[i].GetLabel().String()] = i;
 	}
 
 	return node_labels

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+        "strings"
 	"github.com/Grissess/sdnd16/database"
 	"github.com/Grissess/sdnd16/reader"
 	"github.com/gyuho/goraph/graph"
@@ -38,10 +39,9 @@ func main() {
 		numberOfNodes := len(nodeLabels)
                 labelMap := reader.GetLabelMap(topology)
 
-		rdb, _:= database.NewRoutingDatabase(name, "tcp", address, labelMap)
+	        rdb, err := database.NewRoutingDatabase(name, "tcp", address, labelMap)
 		fmt.Println("Connecting to data base")
 
-		err := rdb.Connect("tcp", address)
 		if err != nil {
 			panic(err)
 		}
@@ -58,11 +58,8 @@ func main() {
                                         src = nodeLabels[i]
                                         dest = nodeLabels[j]
                                         paths, distance, _ := graph.Dijkstra(topology, src, dest)
-                                        var path string
-                                        for k := 0 ; k < len(path); k++ {
-                                                path = path + " " + paths[k]
-                                        }
-					rdb.SetPath(src, dest, fmt.Sprintf("%d %d | %d", src, path, distance[dest]))
+                                        path := strings.Join(paths[1:], " ")
+					rdb.SetPath(src, dest, fmt.Sprintf("%s %s | %d", src, path, int(distance[dest])))
 				}
 			}
 		}

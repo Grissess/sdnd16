@@ -88,13 +88,14 @@ func main() {
 			panic(err)
 		}
 		fmt.Println("Connected")
+                        var src, dest string
 
-                        fmt.Print("Enter a first node")
+                        fmt.Print("Enter a first node > ")
                         fmt.Scanln(&input)
-                        src := input
-                        fmt.Print("Enter a second node")
+                        src = input
+                        fmt.Print("Enter a second node > ")
                         fmt.Scanln(&input)
-                        dest := input
+                        dest = input
 
                         path, DBerr := rdb.GetPathFromDB(src, dest)
                         if DBerr != nil{

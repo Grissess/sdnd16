@@ -17,7 +17,7 @@ import (
 )
 
 //Reads in a topology file with the structure src,dst,weight for every edge
-func ReadFile(filename string) *graph.DefaultGraph {
+func ReadFileToGraph(filename string) *graph.DefaultGraph {
 
 	f, err := os.Open(filename)
 
@@ -61,9 +61,20 @@ func ReadFile(filename string) *graph.DefaultGraph {
 
 	return g;
 }
+//Returns an array of strings containing the labels of all nodes in the graph.
+func LabelList(g *graph.DefaultGraph) []string {
+	vertices := g.GetVertices()
+
+        labels := make([]string, 0, len(vertices))
+        for key:= range vertices{
+                labels = append(labels, key);
+        }
+
+        return labels
+}
 
 //Returns an array of strings containing the labels of all nodes in the graph.
-func LabelList(g *graph.DefaultGraph) map[string]int {
+func LabelMap(g *graph.DefaultGraph) map[string]int {
 	vertices := g.GetVertices()
 
         labels := make([]string, 0, len(vertices))

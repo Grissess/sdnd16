@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	done := 0
+	done := 1
 	var filename string
 	var address string
 	var name string
@@ -97,7 +97,7 @@ func main() {
 
 	} else {
 		fmt.Println("Invalid input program Terminated")
-		done = 1
+		done = 0
 	}
 	var answer string
 	for !(done == 0) {

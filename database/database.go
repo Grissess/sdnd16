@@ -54,6 +54,7 @@ type RoutingDatabase struct {
     name       string
     connection redis.Conn
     paths      Paths
+    backups    Paths
     labels     map[string]int
     topology   map[string]string
     labelsInitialized     bool
@@ -142,6 +143,51 @@ func (self *RoutingDatabase) GetPath(source string, destination string) (string,
     }
 }
 
+// Set a backup in the local backups data.
+func (self *RoutingDatabase) SetBackup(source string, destination string, backup string) error {
+    if !self.labelsInitialized {
+        return errors.New("RoutingDatabase: no labels for topology")
+    }
+    s, okSource := self.labels[source]
+    d, okDestination := self.labels[destination]
+    if okSource && okDestination {
+        self.backups.SetPath(s, d, backup)
+        return nil
+    } else {
+        if !okSource {
+            return errors.New(fmt.Sprintf("RoutingDatabase: invalid source label provided (%s)", source))
+        }
+        if !okDestination {
+            return errors.New(fmt.Sprintf("RoutingDatabase: invalid destination label provided (%s)", destination))
+        }
+        return errors.New("RoutingDatabase: fatal error (you broke boolean algebra)")
+    }
+}
+
+// Get a backup from the locally stored backups data.
+func (self *RoutingDatabase) GetBackup(source string, destination string) (string, error) {
+    if !self.labelsInitialized {
+        return uninitializedPath, errors.New("RoutingDatabase: no labels for topology")
+    }
+    s, okSource := self.labels[source]
+    d, okDestination := self.labels[destination]
+    if okSource && okDestination {
+        backup := self.backups.GetPath(s, d)
+        if backup == uninitializedPath {
+            return uninitializedPath, errors.New("RoutingDatabase: local backup requested is uninitialized")
+        }
+        return backup, nil
+    } else {
+        if !okSource {
+            return uninitializedPath, errors.New(fmt.Sprintf("RoutingDatabase: invalid source label provided (%s)", source))
+        }
+        if !okDestination {
+            return uninitializedPath, errors.New(fmt.Sprintf("RoutingDatabase: invalid destination label provided (%s)", destination))
+        }
+        return uninitializedPath, errors.New("RoutingDatabase: fatal error (you broke boolean algebra)")
+    }
+}
+
 // Connect to a redis database specified by a protocol (network) and address.
 func (self *RoutingDatabase) Connect(network string, address string) error {
     db, err := redis.Dial(network, address)
@@ -182,6 +228,33 @@ func (self *RoutingDatabase) GetPathFromDB(source string, destination string) (s
             return uninitializedPath, errors.New("RoutingDatabase: path not found")
         }
         return path, nil
+    } else {
+        if !okSource {
+            return uninitializedPath, errors.New(fmt.Sprintf("RoutingDatabase: invalid source label provided (%s)", source))
+        }
+        if !okDestination {
+            return uninitializedPath, errors.New(fmt.Sprintf("RoutingDatabase: invalid destination label provided (%s)", destination))
+        }
+        return uninitializedPath, errors.New("RoutingDatabase: fatal error (you broke boolean algebra)")
+    }
+}
+
+// Get backup information for a specific path from a redis database.
+func (self *RoutingDatabase) GetBackupFromDB(source string, destination string) (string, error) {
+    if !self.connectionInitialized {
+        return uninitializedPath, errors.New("RoutingDatabase: no initialized connection to get backup from")
+    }
+    if !self.labelsInitialized {
+        return uninitializedPath, errors.New("RoutingDatabase: no labels for topology")
+    }
+    s, okSource := self.labels[source]
+    d, okDestination := self.labels[destination]
+    if okSource && okDestination {
+        backup, err := redis.String(self.connection.Do("HGET", self.name, fmt.Sprintf("B:S%d:D%d", s, d)))
+        if err != nil {
+            return uninitializedPath, errors.New("RoutingDatabase: backup not found")
+        }
+        return backup, nil
     } else {
         if !okSource {
             return uninitializedPath, errors.New(fmt.Sprintf("RoutingDatabase: invalid source label provided (%s)", source))
@@ -296,6 +369,30 @@ func (self *RoutingDatabase) StorePathsInDB() error {
     }
     if uninitializedPaths != 0 {
         return errors.New(fmt.Sprintf("RoutingDatabase: %d uninitialized paths stored in database", uninitializedPaths))
+    }
+    return nil
+}
+
+// Store all local backup information to a redis database.
+func (self *RoutingDatabase) StoreBackupsInDB() error {
+    if !self.connectionInitialized {
+        return errors.New("RoutingDatabase: no connected database to store backups in")
+    }
+    if !self.labelsInitialized {
+        return errors.New("RoutingDatabase: no labels for topology")
+    }
+    uninitializedBackups := 0
+    for _, i := range self.labels {
+        for _, j := range self.labels {
+            backup := self.backups.GetPath(i, j)
+            if backup == uninitializedPath {
+                uninitializedBackups++
+            }
+            self.connection.Do("HSET", self.name, fmt.Sprintf("B:S%d:D%d", i, j), backup)
+        }
+    }
+    if uninitializedBackups != 0 {
+        return errors.New(fmt.Sprintf("RoutingDatabase: %d uninitialized backups stored in database", uninitializedBackups))
     }
     return nil
 }

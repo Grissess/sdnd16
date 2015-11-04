@@ -188,14 +188,14 @@ func (self *DsGraph) NewNode(label Label) (*DsNode, error) {
 func (self *DsGraph) GetOrCreateNode(label Label) *DsNode {
 	node, err := self.GetNode(label);
 	if err == nil {
-		fmt.Printf("// GOC(%p): Created %s\n", self, node);
+		fmt.Printf("// GOC(%p): Returning %s\n", self, node);
 		return node;
 	}
 	node, err = self.NewNode(label);
 	if node == nil {
 		panic(fmt.Sprintf("Node non-extant and not created; creation error: %s", err.Error()));
 	}
-	fmt.Printf("// GOC(%p): Returning %s\n", self, node);
+	fmt.Printf("// GOC(%p): Created %s\n", self, node);
 	return node;
 }
 

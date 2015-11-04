@@ -1,3 +1,4 @@
+//The test client for this project, allows for storage and retrieval of information
 package main
 
 import (
@@ -48,7 +49,6 @@ func main() {
 		fmt.Println("Connected")
 
 		fmt.Println("Setting paths")
-		fmt.Println("Paths set, storing paths")
 
                 var src, dest string
 
@@ -63,6 +63,8 @@ func main() {
 				}
 			}
 		}
+
+		fmt.Println("Paths set, storing paths")
 		rdb.StorePathsInDB()
 		fmt.Println("Paths stored in data base")
                 rdb.Disconnect()

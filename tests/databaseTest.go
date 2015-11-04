@@ -7,7 +7,7 @@
 package main
 
 import (
-	"../database"
+	"github.com/Grissess/sdnd16/database"
 	"fmt"
 )
 

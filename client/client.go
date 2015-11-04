@@ -3,10 +3,10 @@ package main
 
 import (
 	"fmt"
-        "strings"
 	"github.com/Grissess/sdnd16/database"
 	"github.com/Grissess/sdnd16/reader"
 	"github.com/gyuho/goraph/graph"
+	"strings"
 )
 
 func main() {
@@ -16,6 +16,7 @@ func main() {
 	var name string
 	var nodeLabels []string
 	var topology *graph.DefaultGraph
+	var fileErr error
 
 	var start string
 	fmt.Print("grab or store? > ")
@@ -35,12 +36,16 @@ func main() {
 			address = "128.153.144.171:6379"
 		}
 
-		topology = reader.ReadFileToGraph(filename)
+		topology, fileErr = reader.ReadFileToGraph(filename)
+
+		if fileErr != nil {
+			panic(fileErr)
+		}
 		nodeLabels = reader.GetLabelList(topology)
 		numberOfNodes := len(nodeLabels)
-                labelMap := reader.GetLabelMap(topology)
+		labelMap := reader.GetLabelMap(topology)
 
-	        rdb, err := database.NewRoutingDatabase(name, "tcp", address, labelMap)
+		rdb, err := database.NewRoutingDatabase(name, "tcp", address, labelMap)
 		fmt.Println("Connecting to data base")
 
 		if err != nil {
@@ -50,15 +55,15 @@ func main() {
 
 		fmt.Println("Setting paths")
 
-                var src, dest string
+		var src, dest string
 
 		for i := 0; i < numberOfNodes; i++ {
 			for j := 0; j < numberOfNodes; j++ {
 				if i != j {
-                                        src = nodeLabels[i]
-                                        dest = nodeLabels[j]
-                                        paths, distance, _ := graph.Dijkstra(topology, src, dest)
-                                        path := strings.Join(paths[1:], " ")
+					src = nodeLabels[i]
+					dest = nodeLabels[j]
+					paths, distance, _ := graph.Dijkstra(topology, src, dest)
+					path := strings.Join(paths[1:], " ")
 					rdb.SetPath(src, dest, fmt.Sprintf("%s %s | %d", src, path, int(distance[dest])))
 				}
 			}
@@ -67,7 +72,7 @@ func main() {
 		fmt.Println("Paths set, storing paths")
 		rdb.StorePathsInDB()
 		fmt.Println("Paths stored in data base")
-                rdb.Disconnect()
+		rdb.Disconnect()
 
 	} else if start == "grab" {
 		fmt.Print("enter address and port of database > ")
@@ -78,10 +83,10 @@ func main() {
 			address = "128.153.144.171:6379"
 		}
 
-/*		err := rdb.Connect("tcp", address)
-		if err != nil {
-			panic(err)
-		}*/
+		/*		err := rdb.Connect("tcp", address)
+				if err != nil {
+					panic(err)
+				}*/
 		fmt.Println("Connected")
 
 	} else {

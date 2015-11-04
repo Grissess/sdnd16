@@ -8,12 +8,12 @@ import(
 
 func main(){
         var g *graph.DefaultGraph
-        g = reader.ReadFileToGraph("topology.txt")
+        g, _ = reader.ReadFileToGraph("topology.txt")
         fmt.Print(g.String())
 
         labels := reader.GetLabelList(g)
         fmt.Println(labels)
 
-        neighbors :=reader.GetNeighborMap(g)
+        neighbors , _ :=reader.GetNeighborMap(g)
         fmt.Println(neighbors)
 }

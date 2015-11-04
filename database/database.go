@@ -94,6 +94,7 @@ func NewRoutingDatabase(dbName string, network string, address string, nodeLabel
         return rdb, err
     }
     rdb.SetLabels(nodeLabels)
+    rdb.StoreLabelsInDB()
     rdb.SetTrivialPaths()
     return rdb, nil
 }

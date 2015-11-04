@@ -62,7 +62,7 @@ func ReadFileToGraph(filename string) *graph.DefaultGraph {
 	return g;
 }
 //Returns an array of strings containing the labels of all nodes in the graph.
-func LabelList(g *graph.DefaultGraph) []string {
+func GetLabelList(g *graph.DefaultGraph) []string {
 	vertices := g.GetVertices()
 
         labels := make([]string, 0, len(vertices))
@@ -73,8 +73,8 @@ func LabelList(g *graph.DefaultGraph) []string {
         return labels
 }
 
-//Returns an array of strings containing the labels of all nodes in the graph.
-func LabelMap(g *graph.DefaultGraph) map[string]int {
+//Returns a map of strings, mapping the labels of each node in the graph to a unique number
+func GetLabelMap(g *graph.DefaultGraph) map[string]int {
 	vertices := g.GetVertices()
 
         labels := make([]string, 0, len(vertices))

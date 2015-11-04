@@ -90,6 +90,7 @@ func main() {
 		fmt.Println("Connected")
                         var src, dest string
 
+                for{
                         fmt.Print("Enter a first node > ")
                         fmt.Scanln(&input)
                         src = input
@@ -103,7 +104,7 @@ func main() {
                         }
 
                         fmt.Println("The shortest path is: ", path);
-
+                }
                 rdb.Disconnect()
 	} else {
 		fmt.Println("invalid input program terminated")

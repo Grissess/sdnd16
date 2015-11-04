@@ -12,6 +12,7 @@ import (
 	"github.com/gyuho/goraph/graph"
 	"os"
         "log"
+        "fmt"
 	"strconv"
 )
 
@@ -63,10 +64,18 @@ func ReadFile(filename string) *graph.DefaultGraph {
 
 //Returns an array of strings containing the labels of all nodes in the graph.
 func LabelList(g *graph.DefaultGraph) map[string]int {
-	nodes := g.GetVertices()
+	vertices := g.GetVertices()
 
-	var node_labels map[string]int
-	for i := 0; i < len(nodes); i = i + 1 {
+        labels := make([]string, 0, len(vertices))
+        for key:= range vertices{
+                labels = append(labels, key);
+        }
+
+        fmt.Println(labels)
+
+	node_labels := make(map[string]int)
+	for i := 0; i < len(labels); i = i + 1 {
+                node_labels[labels[i]] = i
 	}
 
 	return node_labels

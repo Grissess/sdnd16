@@ -69,12 +69,12 @@ func ReadFile(filename string) *network.DsGraph{
 }
 
 //Returns an array of strings containing the labels of all nodes in the graph.
-func LabelList(g *network.DsGraph) []string {
+func LabelList(g *network.DsGraph) map[string]int {
 	nodes := g.GetAllNodes()
 
-	var node_labels []string
+	var node_labels map[string]int
 	for i := 0; i < len(nodes); i = i + 1 {
-		node_labels = append(node_labels, nodes[i].GetLabel().String())
+		node_labels[nodes[i].GetLabel().String()] = i;
 	}
 
 	return node_labels

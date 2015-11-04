@@ -29,7 +29,7 @@ func (self ErrAlreadyEdge) Error() string {
 }
 
 func (self ErrNotOwned) Error() string {
-	return fmt.Sprintf("Object %v not owned by graph %v", self.member, self.graph);
+	return fmt.Sprintf("Object %v not owned by graph %p:\n%v (instead owned by %p:)\n%v", self.member, self.graph, self.graph, self.owner, self.owner);
 }
 
 func (self Label) String() string {
@@ -179,13 +179,13 @@ func (self *srchHeap) Pop() interface{} {
 	return ret;
 }
 
-func (self *DsGraph) Search(start *DsNode, dist func(*DsEdge) int) (DsGraph, error) {
+func (self *DsGraph) Search(start *DsNode, dist func(*DsEdge) int) (*DsGraph, error) {
 	ret := NewGraph();
 	if start == nil {
 		return ret, ErrNullPtr("Search start");
 	}
 	if start.graph != self {
-		return ret, ErrNotOwned{graph: self, member: start};
+		return ret, ErrNotOwned{graph: self, member: start, owner: start.graph};
 	}
 	_shp := srchHeap(make([]*DsNode, 0, len(self.nodes)));
 	shp := &_shp;
@@ -201,6 +201,7 @@ func (self *DsGraph) Search(start *DsNode, dist func(*DsEdge) int) (DsGraph, err
 	heap.Push(shp, start);
 	for shp.Len() > 0 {
 		node := heap.Pop(shp).(*DsNode);
+		fmt.Printf("// SEARCH: Popping %s\n", node);
 		newnode := ret.GetOrCreateNode(node.label);
 		for _, edge := range(node.GetOutgoing()) {
 			dst := edge.GetDst();
@@ -209,7 +210,10 @@ func (self *DsGraph) Search(start *DsNode, dist func(*DsEdge) int) (DsGraph, err
 			case srch_UNVISITED:
 				dst.SetAttr(ATTR_NSDIST, node.GetAttr(ATTR_NSDIST).(int) + dist(edge));
 				newdst.SetAttr(ATTR_NSDIST, node.GetAttr(ATTR_NSDIST).(int) + dist(edge));
-				ret.NewEdge(newnode, newdst);
+				newedge, _ := ret.NewEdge(newnode, newdst);
+				if newedge != nil {
+					newedge.SetAttr("!introduced", 1);
+				}
 				heap.Push(shp, dst);
 				status[newdst] = srch_OPEN;
 
@@ -218,12 +222,17 @@ func (self *DsGraph) Search(start *DsNode, dist func(*DsEdge) int) (DsGraph, err
 				if newdist < newdst.GetAttr(ATTR_NSDIST).(int) {
 					dst.SetAttr(ATTR_NSDIST, newdist);
 					newdst.SetAttr(ATTR_NSDIST, newdist);
-					for _, edge := range(newdst.GetIncoming()) {
-						ret.RemoveEdge(edge);
+					inedges := newdst.GetIncoming();
+					for idx := range(inedges) {
+						edge.SetAttr("!removed", 1);
+						ret.RemoveEdge(inedges[idx]);
 					}
 					ret.NewEdge(newnode, newdst);
 					heap.Init(shp);  // FIXME
 				}
+
+			default:
+				fmt.Println("// WARNING: Encountered node with null status within search heap");
 			}
 		}
 		status[newnode] = srch_CLOSED;

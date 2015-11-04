@@ -11,10 +11,12 @@ import (
 	"bufio"
 	"github.com/Grissess/sdnd16/network"
 	"os"
+	"strconv"
+	"fmt"
 )
 
 //Reads in a topology file with the structure src,dst,weight for every edge
-func ReadFile(filename string) network.DsGraph {
+func ReadFile(filename string) *network.DsGraph{
 
 	f, _ := os.Open(filename)
 
@@ -45,13 +47,20 @@ func ReadFile(filename string) network.DsGraph {
 	for i := 0; i < len(srcs); i = i + 1 {
 		s := g.GetOrCreateNode(network.Label(srcs[i]))
 		d := g.GetOrCreateNode(network.Label(dests[i]))
-		e1, _ := g.NewEdge(s, d)
-		e2, _ := g.NewEdge(d, s)
-		e1.SetAttr("cost", weights[i])
-		e2.SetAttr("cost", weights[i])
+		e1, err1 := g.NewEdge(s,d);
+		e2, err2 := g.NewEdge(d,s);
+		if err1 != nil {
+			fmt.Printf("// ERROR: Creating edge: %s", err1);
+		}
+		if err2 != nil {
+			fmt.Printf("// ERROR: Creating edge: %s", err2);
+		}
+		cost, _ := strconv.Atoi(weights[i]);
+		e1.SetAttr("cost", cost);
+		e2.SetAttr("cost", cost);
 	}
 
-	return g
+	return g;
 }
 
 //Returns an array of strings containing the labels of all nodes in the graph.

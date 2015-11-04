@@ -188,12 +188,14 @@ func (self *DsGraph) NewNode(label Label) (*DsNode, error) {
 func (self *DsGraph) GetOrCreateNode(label Label) *DsNode {
 	node, err := self.GetNode(label);
 	if err == nil {
+		fmt.Printf("// GOC(%p): Created %s\n", self, node);
 		return node;
 	}
 	node, err = self.NewNode(label);
 	if node == nil {
 		panic(fmt.Sprintf("Node non-extant and not created; creation error: %s", err.Error()));
 	}
+	fmt.Printf("// GOC(%p): Returning %s\n", self, node);
 	return node;
 }
 
@@ -222,22 +224,29 @@ func (self *DsGraph) NewEdge(src *DsNode, dst *DsNode) (*DsEdge, error) {
 	return edgeref, nil;
 }
 
-func (self *DsGraph) RemoveEdge(edge *DsEdge) {
+func (self *DsGraph) RemoveEdge(edge *DsEdge) bool {
 	if edge == nil {
-		return;
+		return false;
 	}
 	if edge.graph != self {
-		return;
+		fmt.Printf("// WARNING: Removing edge %v (%p) from non-owning graph %p (owned by %p)\n", edge, edge, self, edge.graph);
+		return false;
+	}
+	if _, found := edge.src.outgoing[edge.dst]; !found {
+		fmt.Printf("// SANITY: Source does not register outgoing edge %p!\n", edge);
+	}
+	if _, found := edge.dst.incoming[edge.src]; !found {
+		fmt.Printf("// SANITY: Destination does not register incoming edge %p!\n", edge);
 	}
 	delete(edge.src.outgoing, edge.dst);
 	delete(edge.dst.incoming, edge.src);
-	for idx, elem := range(self.edges) {  // FIXME
-		if edge == &elem {
-			copy(self.edges[idx:len(self.edges)-1], self.edges[idx+1:]);
-			self.edges = self.edges[:len(self.edges)-1];
-			return;
+	for idx := range(self.edges) {  // FIXME
+		if edge == &self.edges[idx] {
+			self.edges = append(self.edges[:idx], self.edges[idx+1:]...);
+			return true;
 		}
 	}
+	return false;
 }
 
 func (self *DsGraph) RemoveNode(node *DsNode) {
@@ -245,21 +254,22 @@ func (self *DsGraph) RemoveNode(node *DsNode) {
 		return;
 	}
 	if node.graph != self {
+		fmt.Printf("// WARNING: Removing node %v (%p) from non-owning graph %p (owned by %p)\n", node, node, self, node.graph);
 		return;
 	}
 	for _, edge := range(node.GetEdges()) {
-		self.RemoveEdge(edge);  // FIXME
+		if !self.RemoveEdge(edge) {  // FIXME
+			fmt.Printf("// SANITY: Failed to remove an edge %p returned in the set of all edges of %s!\n", edge, node);
+		}
 	}
-	for idx, elem := range(self.nodes) {  // FIXME
-		if node == &elem {
-			copy(self.nodes[idx:len(self.nodes)-1], self.nodes[idx+1:]);
-			self.nodes = self.nodes[:len(self.nodes)-1];
+	for idx := range(self.nodes) {  // FIXME
+		if node == &self.nodes[idx] {
+			self.nodes = append(self.nodes[:idx], self.nodes[idx+1:]...);
 			return;
 		}
 	}
 }
 
-
-func NewGraph() DsGraph {
-	return DsGraph{edges: nil, nodes: nil, labels: make(map[Label]*DsNode), attrs: make(map[string]interface{})};
+func NewGraph() *DsGraph {
+	return &DsGraph{edges: nil, nodes: nil, labels: make(map[Label]*DsNode), attrs: make(map[string]interface{})};
 }

@@ -5,7 +5,7 @@ import(
 	"fmt"
 	"strconv"
 	"os"
-	"../network"
+	"github.com/Grissess/sdnd16/network"
 )
 
 

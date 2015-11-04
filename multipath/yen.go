@@ -27,12 +27,19 @@ func (m metricPathSlice) Swap(i, j int) {
 	m[i] = m[j];
 	m[j] = temp;
 }
-func (m *metricPathSlice) AppendUnique(p metricPath) {
-	fmt.Printf("Appending %v to MPS %v\n", p, *m);
+func (m *metricPathSlice) AppendUnique(p metricPath, solutions [][]string) {
+	fmt.Printf("Appending %v to MPS %v with existing solutions (%v)\n", p, *m, solutions);
 	found := false;
 	for _, elem := range(*m) {
 		if pathsEqual(p.path, elem.path) {
-			fmt.Printf("...rejected (present)\n");
+			fmt.Printf("...rejected (present in MPS)\n");
+			found = true;
+			break;
+		}
+	}
+	for _, elem := range(solutions) {
+		if pathsEqual(p.path, elem) {
+			fmt.Printf("...rejected (present in solution)\n");
 			found = true;
 			break;
 		}
@@ -76,9 +83,7 @@ func Yen(_grph graph.Graph, source, sink string, K int) [][]string {
 	var firstPath []string;
 	A := make([][]string, 0, K);
 	firstPath, _, err = graph.Dijkstra(_grph, source, sink);
-	copiedPath := make([]string, len(firstPath));
-	copy(copiedPath, firstPath);
-	A = append(A, copiedPath);
+	A = append(A, append([]string(nil), firstPath...));
 	if err != nil {
 		return nil;
 	}
@@ -87,7 +92,7 @@ func Yen(_grph graph.Graph, source, sink string, K int) [][]string {
 	removedEdges := make([]nodePair, 0);
 	for k := 1; k < K; k++ {
 		fmt.Printf("Current shortest paths: %s\n", A);
-		for i := 1; i < len(A[k - 1]) - 1; i++ {
+		for i := 0; i < len(A[k - 1]) - 1; i++ {
 			grph := copyGraph(_grph);
 			spurNode := A[k - 1][i];
 			rootPath := A[k - 1][:i + 1];
@@ -126,10 +131,12 @@ func Yen(_grph graph.Graph, source, sink string, K int) [][]string {
 			spurPath, spurCosts, err := graph.Dijkstra(grph, spurNode, sink);
 			fmt.Printf("Path from %s to %s: %s\n", spurNode, sink, spurPath);
 			if err == nil {
-				copiedPath := make([]string, len(spurPath));
-				copy(copiedPath, spurPath);
-				totalPath := append(rootPath[:len(rootPath) - 1], copiedPath...);
-				B.AppendUnique(metricPath{path: totalPath, metric: spurCosts[sink]});
+				totalPath := append(rootPath[:len(rootPath) - 1], append([]string(nil), spurPath...)...);
+				if totalPath[len(totalPath) - 1] != sink {
+					fmt.Printf("WARNING: Rejecting (path doesn't end at sink)\n");
+				} else {
+					B.AppendUnique(metricPath{path: totalPath, metric: spurCosts[sink]}, A);
+				}
 			}
 
 			for _, node := range(removedNodes) {

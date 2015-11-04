@@ -9,7 +9,7 @@ import(
 
 func main(){
         var g *graph.DefaultGraph
-        g = reader.ReadFile("topology.txt")
+        g = reader.ReadFileToGraph("topology.txt")
         fmt.Println(g.String())
 
 		paths := multipath.Yen(g, "1", "5", 5);

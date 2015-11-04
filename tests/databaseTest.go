@@ -7,16 +7,22 @@
 package main
 
 import (
-	"github.com/Grissess/sdnd16/database"
+	"../database"
 	"fmt"
 )
 
 func main() {
 
-	numberOfNodes := 3
     address := "128.153.144.171:6379"
 
-	rdb := database.NewRoutingDatabase("test", numberOfNodes)
+    labelMap := make(map[string]int)
+    labelMap["alpha"] = 0
+    labelMap["bravo"] = 1
+    labelMap["charlie"] = 2
+
+	rdb := database.NewRoutingDatabase("NATO")
+    rdb.SetLabels(labelMap)
+
     err := rdb.Connect("tcp", address)
     if err != nil {
         panic(err)
@@ -26,6 +32,14 @@ func main() {
     // phoenix at cosi
 
     rdb.SetTrivialPaths()
+    for source, a := range labelMap {
+        for destination, b := range labelMap {
+            if source != destination {
+                rdb.SetPath(source, destination, fmt.Sprintf("%s %s | %d", source, destination, a + b))
+            }
+        }
+    }
+/*
 	for i := 0; i < numberOfNodes; i++ {
 		for j := 0; j < numberOfNodes; j++ {
 			if i != j {
@@ -33,24 +47,23 @@ func main() {
             }
         }
 	}
+*/
+    rdb.StoreLabelsInDB()
+    rdb.StorePathsInDB()
 
-	rdb.StorePathsInDB()
-
-	var s, d int
-    var path string
+	var src, dest, path string
 
 	for {
-		fmt.Print("enter the pair of nodes you want a path between (s, d) > ")
-		fmt.Scanf("(%d, %d)\n", &s, &d)
-		if s >= numberOfNodes || s < 0 || d >= numberOfNodes || d < 0 {
-			fmt.Printf("at least one specified node is not in the range 0 - %d\n", (numberOfNodes - 1))
-			continue
-		}
-		path, err = rdb.GetPathFromDB(s, d)
+		fmt.Print("enter the source label > ")
+        fmt.Scanln(&src)
+        fmt.Print("enter the destination label > ")
+        fmt.Scanln(&dest)
+        path, err = rdb.GetPathFromDB(src, dest)
         if err != nil {
-            panic(err)
+            fmt.Println(err)
+            continue
         }
-		fmt.Printf("the shortest path from %d to %d is: %s\n", s, d, path)
+		fmt.Printf("the shortest path from %s to %s is: %s\n", src, dest, path)
 	}
 
 }

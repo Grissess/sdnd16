@@ -18,11 +18,11 @@ func main() {
 	var topology *graph.DefaultGraph
 	var fileErr error
 
-	var start string
+	var input string
 	fmt.Print("grab or store? > ")
-	fmt.Scanln(&start)
+	fmt.Scanln(&input)
 
-	if start == "store" {
+	if input == "store" {
 
 		fmt.Print("enter topology filename > ")
 		fmt.Scanln(&filename)
@@ -74,21 +74,37 @@ func main() {
 		fmt.Println("Paths stored in data base")
 		rdb.Disconnect()
 
-	} else if start == "grab" {
-		fmt.Print("enter address and port of database > ")
+	} else if input == "grab" {
+                fmt.Print("enter topology name > ")
+		fmt.Scanln(&name)
+                fmt.Print("enter address and port of database > ")
 		fmt.Scanln(&address)
 
 		if address == "" {
 			fmt.Println("- no address specified, using default database")
 			address = "128.153.144.171:6379"
 		}
-
-		/*		err := rdb.Connect("tcp", address)
-				if err != nil {
-					panic(err)
-				}*/
+                rdb,err := database.NewRoutingDatabaseFromDB(name, "tcp", address)
+		if err != nil {
+			panic(err)
+		}
 		fmt.Println("Connected")
 
+                        fmt.Print("Enter a first node")
+                        fmt.Scanln(&input)
+                        src := input
+                        fmt.Print("Enter a second node")
+                        fmt.Scanln(&input)
+                        dest := input
+
+                        path, DBerr := rdb.GetPathFromDB(src, dest)
+                        if DBerr != nil{
+                                panic(DBerr)
+                        }
+
+                        fmt.Println("The shortest path is: ", path);
+
+                rdb.Disconnect()
 	} else {
 		fmt.Println("invalid input program terminated")
 	}

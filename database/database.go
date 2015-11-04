@@ -241,6 +241,41 @@ func (self *RoutingDatabase) StoreLabelsInDB() error {
     return nil
 }
 
+// Set the local topology info to a specific map from a node label to its neighbors labels.
+func (self *RoutingDatabase) SetTopology(topologyMap map[string]string) {
+    self.topology = topologyMap
+}
+
+// Store all local topology info in the connected redis database.
+func (self *RoutingDatabase) StoreTopologyInDB() error {
+    if !self.connectionInitialized {
+        return errors.New("RoutingDatabase: no connected database to store paths in")
+    }
+    if !self.labelsInitialized {
+        return errors.New("RoutingDatabase: no labels for topology")
+    }
+    self.connection.Do("HSET", self.name, "T:SIZE", fmt.Sprintf("%d", len(self.topology)))
+    for node, neighbors := range self.topology {
+        index, _ := self.labels[node]
+        self.connection.Do("HSET", self.name, fmt.Sprintf("T:%d", index), neighbors)
+    }
+    return nil
+}
+
+// Store all local topology info in the connected redis database.
+func (self *RoutingDatabase) GetNeighborsFromDB(node string) (string, error) {
+    if !self.connectionInitialized {
+        return "", errors.New("RoutingDatabase: no connected database to store paths in")
+    }
+    if !self.labelsInitialized {
+        return "", errors.New("RoutingDatabase: no labels for topology")
+    }
+    var neighbors string
+    index, _ := self.labels[node]
+    self.connection.Do("HGET", self.name, fmt.Sprintf("T:%d", index), neighbors)
+    return neighbors, nil
+}
+
 // Store all local path information to a redis database.
 func (self *RoutingDatabase) StorePathsInDB() error {
     if !self.connectionInitialized {

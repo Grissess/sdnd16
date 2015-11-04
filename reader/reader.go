@@ -14,6 +14,7 @@ import (
         "log"
         "fmt"
 	"strconv"
+        "strings"
 )
 
 //Reads in a topology file with the structure src,dst,weight for every edge
@@ -90,4 +91,21 @@ func GetLabelMap(g *graph.DefaultGraph) map[string]int {
 	}
 
 	return node_labels
+}
+
+//Returns a map of strings mapping the labels of nodes to their neighbors.
+func GetNeighborMap(g * graph.DefaultGraph) map[string]string {
+        labels := GetLabelList(g)
+        neighborMap := make(map[string]string)
+        for i:= 0; i< len(labels); i = i + 1 {
+                neighbors, _ := g.GetParents(labels[i])
+                neighborLabels := make([]string, 0, len(neighbors))
+                for key := range neighbors{
+                        neighborLabels = append(neighborLabels, key);
+                }
+
+                neighborMap[labels[i]] = strings.Join(neighborLabels, " ")
+        }
+
+        return neighborMap
 }

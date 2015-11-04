@@ -11,10 +11,9 @@ func main(){
         g = reader.ReadFileToGraph("topology.txt")
         fmt.Print(g.String())
 
-        labels := reader.LabelList(g);
-        fmt.Print(labels);
+        labels := reader.GetLabelList(g)
+        fmt.Println(labels)
 
-        path, distance, _:= graph.Dijkstra(g, "1", "5")
-        fmt.Println(path)
-        fmt.Println(distance)
+        neighbors :=reader.GetNeighborMap(g)
+        fmt.Println(neighbors)
 }

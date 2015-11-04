@@ -2,13 +2,12 @@
 package main
 
 import (
-	"fmt"
+        "fmt"
 	"github.com/Grissess/sdnd16/database"
 	"github.com/Grissess/sdnd16/reader"
 	"github.com/gyuho/goraph/graph"
 	"strings"
 )
-
 func main() {
 
 	var filename string

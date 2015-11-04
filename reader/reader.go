@@ -8,7 +8,6 @@ package reader
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/gyuho/goraph/graph"
 	"os"
 	"strconv"
@@ -90,8 +89,6 @@ func GetLabelMap(g *graph.DefaultGraph) map[string]int {
 	for key := range vertices {
 		labels = append(labels, key)
 	}
-
-	fmt.Println(labels)
 
 	node_labels := make(map[string]int)
 	for i := 0; i < len(labels); i = i + 1 {

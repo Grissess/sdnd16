@@ -15,7 +15,7 @@ func main() {
 	var address string
 	var name string
 	var nodeLabels []string
-	var topology network.DsGraph
+	var topology *network.DsGraph
 
 	if len(os.Args) == 1 {
 
@@ -32,7 +32,7 @@ func main() {
 		}
 
 		topology = reader.ReadFile(filename)
-		nodeLabels = reader.LabelList(&topology)
+		nodeLabels = reader.LabelList(topology)
 		numberOfNodes := len(nodeLabels)
 
 		rdb := database.NewRoutingDatabase(name, numberOfNodes)
@@ -61,7 +61,7 @@ func main() {
 		fmt.Println("using", os.Args[1],"creating a topology named",os.Args[2], "using default database")
 
 		topology = reader.ReadFile(os.Args[1])
-		nodeLabels = reader.LabelList(&topology)
+		nodeLabels = reader.LabelList(topology)
 		numberOfNodes := len(nodeLabels)
 		
 		rdb := database.NewRoutingDatabase(os.Args[2], numberOfNodes)
@@ -90,7 +90,7 @@ func main() {
 				fmt.Println("using", os.Args[1],"creating a topology named", os.Args[2], "using the database at", os.Args[3])
 
 		topology = reader.ReadFile(os.Args[1])
-		nodeLabels = reader.LabelList(&topology)
+		nodeLabels = reader.LabelList(topology)
 		numberOfNodes := len(nodeLabels)
 
 		rdb := database.NewRoutingDatabase(os.Args[2], numberOfNodes)

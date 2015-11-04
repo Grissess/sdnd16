@@ -1,6 +1,8 @@
 // Yen's algorithm -- a way of finding the K shortest paths assuming an efficient
 // algorithm exists for finding a shortest path in general.
 
+package multipath
+
 import (
 	"sort"
 	"github.com/gyuho/goraph/graph"
@@ -17,7 +19,7 @@ type metricPath struct {
 }
 
 func (m []metricPath) Len() int {return len(m);}
-func (m []metricPath) Less(i, j int) bool {return m[i].metric < m[j].metric);}
+func (m []metricPath) Less(i, j int) bool {return m[i].metric < m[j].metric;}
 func (m []metricPath) Swap(i, j int) {
 	temp := m[i];
 	m[i] = m[j];

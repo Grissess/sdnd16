@@ -29,6 +29,7 @@ type ErrAlreadyEdge struct {
 type ErrNotOwned struct {
 	graph *DsGraph
 	member GraphMember
+	owner *DsGraph
 }
 
 type Attributed interface {

@@ -1,5 +1,4 @@
-//The reader package contains file reading files and other interfaceing functions for
-// CS350 Team 5's Graph Project
+//The reader package contains file reading and other utility functions.
 package reader
 
 /*

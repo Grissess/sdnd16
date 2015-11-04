@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"github.com/Grissess/sdnd16/network"
 	"os"
+        "log"
 	"strconv"
 	"fmt"
 )
@@ -18,7 +19,11 @@ import (
 //Reads in a topology file with the structure src,dst,weight for every edge
 func ReadFile(filename string) *network.DsGraph{
 
-	f, _ := os.Open(filename)
+	f, err := os.Open(filename)
+
+        if err != nil {
+                log.Fatal(err)
+        }
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)

@@ -9,15 +9,12 @@ import(
 func main(){
         var g *graph.DefaultGraph
         g = reader.ReadFile("topology.txt")
-        fmt.Print(g.String())
+//        fmt.Print(g.String())
 
-        vertices := g.GetVertices()
-        labels := make([]string, 0, len(vertices))
-        for key := range vertices{
-                labels = append(labels, key);
-        }
+        mapy :=reader.LabelList(g);
+        fmt.Println(mapy)
 
-        path, distance, _:= graph.Dijkstra(g, "1", "5")
+/*        path, distance, _:= graph.Dijkstra(g, "1", "5")
         fmt.Println(path)
-        fmt.Println(distance)
+        fmt.Println(distance) */
 }

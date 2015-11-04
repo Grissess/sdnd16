@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/Grissess/sdnd16/database"
-	"github.com/Grissess/sdnd16/network"
 	"github.com/Grissess/sdnd16/reader"
+        "github.com/gyuho/goraph/graph"
 	"os"
 )
 
@@ -15,7 +15,7 @@ func main() {
 	var address string
 	var name string
 	var nodeLabels []string
-	var topology *network.DsGraph
+	var topology *graph.DefaultGraph
 
 	if len(os.Args) == 1 {
 		var start string
@@ -36,8 +36,8 @@ func main() {
 				address = "128.153.144.171:6379"
 			}
 
-			topology = reader.ReadFile(filename)
-			nodeLabels = reader.LabelList(topology)
+			topology = reader.ReadFileToGraph(filename)
+			nodeLabels = reader.GetLabelList(topology)
 			numberOfNodes := len(nodeLabels)
 
 			rdb := database.NewRoutingDatabase(name, numberOfNodes)
@@ -70,10 +70,10 @@ func main() {
 				address = "128.153.144.171:6379"
 			}
 
-			err := rdb.Connect("tcp", address)
+			/*err := rdb.Connect("tcp", address)
 			if err != nil {
 				panic(err)
-			}
+			}*/
 			fmt.Println("Connected")
 
 		} else {
@@ -83,8 +83,8 @@ func main() {
 	} else if len(os.Args) == 3 {
 		fmt.Println("using", os.Args[1], "creating a topology named", os.Args[2], "using default database")
 
-		topology = reader.ReadFile(os.Args[1])
-		nodeLabels = reader.LabelList(topology)
+		topology = reader.ReadFileToGraph(os.Args[1])
+		nodeLabels = reader.GetLabelList(topology)
 		numberOfNodes := len(nodeLabels)
 
 		rdb := database.NewRoutingDatabase(os.Args[2], numberOfNodes)
@@ -111,8 +111,8 @@ func main() {
 	} else if len(os.Args) == 4 {
 		fmt.Println("using", os.Args[1], "creating a topology named", os.Args[2], "using the database at", os.Args[3])
 
-		topology = reader.ReadFile(os.Args[1])
-		nodeLabels = reader.LabelList(topology)
+		topology = reader.ReadFileToGraph(os.Args[1])
+		nodeLabels = reader.GetLabelList(topology)
 		numberOfNodes := len(nodeLabels)
 
 		rdb := database.NewRoutingDatabase(os.Args[2], numberOfNodes)

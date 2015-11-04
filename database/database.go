@@ -86,7 +86,6 @@ func NewRoutingDatabaseFromDB(dbName string, network string, address string) (Ro
         return rdb, err
     }
     rdb.GetLabelsFromDB()
-    rdb.SetTrivialPaths()
     return rdb, nil
 }
 
@@ -289,10 +288,17 @@ func (self *RoutingDatabase) GetLabelsFromDB() error {
         return errors.New("RoutingDatabase: no connected database to store paths in")
     }
     var sizeStr, nodeLabel string
-    self.connection.Do("HGET", self.name, "L:SIZE", sizeStr)
-    size, _ := strconv.Atoi(sizeStr)
+    var size int
+    sizeStr, err := redis.String(self.connection.Do("HGET", self.name, "L:SIZE"))
+    if err != nil {
+        return err
+    }
+    size, _ = strconv.Atoi(sizeStr)
     for i := 0; i < size; i++ {
-        self.connection.Do("HSET", self.name, fmt.Sprintf("L:%d", i), nodeLabel)
+        nodeLabel, err = redis.String(self.connection.Do("HGET", self.name, fmt.Sprintf("L:%d", i)))
+        if err != nil {
+            return err
+        }
         self.labels[nodeLabel] = i
     }
     self.labelsInitialized = true

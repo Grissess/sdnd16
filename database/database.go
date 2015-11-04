@@ -43,50 +43,27 @@ func (self *Paths) GetPath(source int, destination int) string {
     }
 }
 
-// Return the number of nodes in a given topology Paths is storing paths for.
+// Return the number of nodes in a given Paths structure.
 func (self *Paths) GetNumNodes() int {
     return self.numNodes
 }
 
-/*
-type DsTopologyData struct {
-    graph []string
-    numNodes int
-}
-
-func NewTopologyData(numberOfNodes int) DsTopologyData {
-    return DsTopologyData {graph: make([]string, (numberOfNodes * numberOfNodes)), numNodes: numberOfNodes}
-}
-
-func (self *DsTopologyData) SetNodeNeighbors(node int, neighbors string) {
-    if node < self.numNodes && node >= 0 {
-        self.graph[node] = neighbors
-    }
-}
-
-func (self *DsTopologyData) GetNodeNeighbors(node int) string {
-    if node < self.numNodes && node >= 0 {
-        return self.graph[node]
-    } else {
-        return "invalide node"
-    }
-}
-*/
-
-// Structure devoted to storing a Paths for a topology, as well as a connection to a redis database.
-// Functions RoutingDatabase provides aim to ease storing a set of paths or a topology in a redis database.
+// Structure devoted to storing paths for a topology, as well as a connection to a redis database.
+// Functions RoutingDatabase provides a means to store a set of paths for a topology in a redis database.
 type RoutingDatabase struct {
     name       string
     connection redis.Conn
     paths      Paths
     labels     map[string]int
-//    topology   Topology
+    topology   map[string]string
     labelsInitialized     bool
     connectionInitialized bool
     numNodes              int
 }
 
-// Create a new routing database structure with a given name and number of nodes.
+// Create a new routing database structure with a given name,
+// a connection to a redis database specified by a network type and an ip address,
+// and a map from strings to ints indicating unique ids for string labels.
 func NewRoutingDatabase(dbName string, network string, address string, nodeLabels map[string]int) (RoutingDatabase, error) {
     rdb := RoutingDatabase{name: dbName, connection: nil, paths: NewPaths(0), labels: make(map[string]int), labelsInitialized: false, connectionInitialized: false, numNodes: -1}
     err := rdb.Connect(network, address)
@@ -99,6 +76,8 @@ func NewRoutingDatabase(dbName string, network string, address string, nodeLabel
     return rdb, nil
 }
 
+// Create a new routing database structure for a database with the specified name, and a connection to a database specified as in NewRoutingDatabase.
+// This function is intended to be used when grabbing from a databse and not intending to modify the topology.
 func NewRoutingDatabaseFromDB(dbName string, network string, address string) (RoutingDatabase, error) {
     rdb := RoutingDatabase{name: dbName, connection: nil, paths: NewPaths(0), labels: make(map[string]int), labelsInitialized: false, connectionInitialized: false, numNodes: -1}
     err := rdb.Connect(network, address)
@@ -110,6 +89,7 @@ func NewRoutingDatabaseFromDB(dbName string, network string, address string) (Ro
     return rdb, nil
 }
 
+// Set the map of labels in the local graph data.
 func (self *RoutingDatabase) SetLabels(nodeLabels map[string]int) {
     self.labels = nodeLabels
     self.numNodes = len(nodeLabels)
@@ -117,7 +97,7 @@ func (self *RoutingDatabase) SetLabels(nodeLabels map[string]int) {
     self.labelsInitialized = true
 }
 
-// Set a path in the RoutingDatabase's corresponding Paths structure. (local)
+// Set a path in the local paths data.
 func (self *RoutingDatabase) SetPath(source string, destination string, path string) error {
     if !self.labelsInitialized {
         return errors.New("RoutingDatabase: no labels for topology")
@@ -138,7 +118,7 @@ func (self *RoutingDatabase) SetPath(source string, destination string, path str
     }
 }
 
-// Get a path from a RoutingDatabase's corresponding Paths structure. (local)
+// Get a path from the locally stored paths data.
 func (self *RoutingDatabase) GetPath(source string, destination string) (string, error) {
     if !self.labelsInitialized {
         return uninitializedPath, errors.New("RoutingDatabase: no labels for topology")
@@ -172,6 +152,7 @@ func (self *RoutingDatabase) Connect(network string, address string) error {
     return err
 }
 
+// Disconnect from the connected database.
 func (self *RoutingDatabase) Disconnect() error {
     if self.connectionInitialized {
         self.connection.Close()
@@ -185,7 +166,7 @@ func (self *RoutingDatabase) GetNumNodes() int {
     return self.numNodes
 }
 
-// Get path information for a specific path from a redis database. (remote)
+// Get path information for a specific path from a redis database.
 func (self *RoutingDatabase) GetPathFromDB(source string, destination string) (string, error) {
     if !self.connectionInitialized {
         return uninitializedPath, errors.New("RoutingDatabase: no initialized connection to get path from")
@@ -212,17 +193,24 @@ func (self *RoutingDatabase) GetPathFromDB(source string, destination string) (s
     }
 }
 
+// Locally set all paths from a node to itself with cost 0.
 func (self *RoutingDatabase) SetTrivialPaths() {
     for key, index := range self.labels {
         self.paths.SetPath(index, index, fmt.Sprintf("%s | 0", key))
     }
 }
 
+// Check if a specific label exists in the label map.
 func (self *RoutingDatabase) IsValidLabel(label string) bool {
+    if !self.labelsInitialized {
+        return false
+    }
     _, ok := self.labels[label]
     return ok
 }
 
+// From the connected redis database obtain a local copy of the label map,
+// this is necessary to query for paths.
 func (self *RoutingDatabase) GetLabelsFromDB() error {
     if !self.connectionInitialized {
         return errors.New("RoutingDatabase: no connected database to store paths in")
@@ -238,6 +226,7 @@ func (self *RoutingDatabase) GetLabelsFromDB() error {
     return nil
 }
 
+// Store the local copy of the label map in the connected redis database.
 func (self *RoutingDatabase) StoreLabelsInDB() error {
     if !self.connectionInitialized {
         return errors.New("RoutingDatabase: no connected database to store paths in")
@@ -252,7 +241,7 @@ func (self *RoutingDatabase) StoreLabelsInDB() error {
     return nil
 }
 
-// Store all local Paths information to a redis database. (remote)
+// Store all local path information to a redis database.
 func (self *RoutingDatabase) StorePathsInDB() error {
     if !self.connectionInitialized {
         return errors.New("RoutingDatabase: no connected database to store paths in")

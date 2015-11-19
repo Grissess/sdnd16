@@ -3,8 +3,8 @@ package main
 
 import (
         "fmt"
-	"../database"
-	"../reader"
+	"github.com/Grissess/sdnd16/database"
+	"github.com/Grissess/sdnd16/utils"
 	"github.com/gyuho/goraph/graph"
 	"strings"
 )
@@ -35,14 +35,14 @@ func main() {
 			address = "128.153.144.171:6379"
 		}
 
-		topology, fileErr = reader.ReadFileToGraph(filename)
+		topology, fileErr = utils.ReadFileToGraph(filename)
 
 		if fileErr != nil {
 			panic(fileErr)
 		}
-		nodeLabels = reader.GetLabelList(topology)
+		nodeLabels = utils.GetLabelList(topology)
 		numberOfNodes := len(nodeLabels)
-		labelMap := reader.GetLabelMap(topology)
+		labelMap := utils.GetLabelMap(topology)
 
 		rdb, err := database.NewRoutingDatabase(name, "tcp", address, labelMap)
 		fmt.Println("Connecting to data base")

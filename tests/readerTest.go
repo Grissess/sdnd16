@@ -3,18 +3,18 @@ package main
 import(
 	"fmt"
 	"github.com/gyuho/goraph/graph"
-	"github.com/Grissess/sdnd16/reader"
+	"github.com/Grissess/sdnd16/utils"
 )
 
 func main(){
         var g *graph.DefaultGraph
-        g, _ = reader.ReadFileToGraph("topology.txt")
-        g = reader.ReadFile("topology.txt")
+        g, _ = utils.ReadFileToGraph("topology.txt")
+        g = utils.ReadFile("topology.txt")
         fmt.Print(g.String())
 
-        labels := reader.GetLabelList(g)
+        labels := utils.GetLabelList(g)
         fmt.Println(labels)
 
-        neighbors , _ :=reader.GetNeighborMap(g)
+        neighbors , _ :=utils.GetNeighborMap(g)
         fmt.Println(neighbors)
 }

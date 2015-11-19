@@ -2,13 +2,13 @@
 package main
 
 import(
-        "github.com/Grissess/sdnd16/reader"
+        "github.com/Grissess/sdnd16/utils"
         "github.com/Grissess/sdnd16/network"
         "fmt"
 )
 
 func main(){
-		g := reader.ReadFile("topology.txt");
+		g := utils.ReadFile("topology.txt");
 		start := g.GetAllNodes()[0];
 		sg, err := g.Search(start, func(edge *network.DsEdge) int { return edge.GetAttr("cost").(int); });
 		sg.ToDot();

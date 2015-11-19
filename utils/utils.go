@@ -1,5 +1,5 @@
 //The reader package contains file reading and other utility functions.
-package reader
+package utils
 
 /*
 * CS350 Team 5 - File reading and  related functions
@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"github.com/gyuho/goraph/graph"
 	"os"
+        "fmt"
 	"strconv"
 	"strings"
 )
@@ -116,4 +117,27 @@ func GetNeighborMap(g *graph.DefaultGraph) (map[string]string, error) {
 	}
 
 	return neighborMap, nil
+}
+
+func ToDot(grph graph.Graph, directed bool) string {
+         lines := make([]string, 0);
+         var sep string; 
+         if directed {
+                 lines = append(lines, "digraph {");
+                 sep = "->";
+         } else {
+                 lines = append(lines, "strict graph {");
+                 sep = "--";
+         }
+         nodes := grph.GetVertices();
+         for node, _ := range(nodes) {
+                 lines = append(lines, fmt.Sprintf("\"%s\"", node));
+                 children, _ := grph.GetChildren(node);
+                 for child, _ := range(children) {
+                         weight, _ := grph.GetWeight(node, child);
+                         lines = append(lines, fmt.Sprintf("\"%s\" %s \"%s\" [label=\"%f\"]", node, sep, child, weight));
+                 }
+         }
+         lines = append(lines, "}");
+         return strings.Join(lines, "\n");
 }

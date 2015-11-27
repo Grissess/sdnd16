@@ -2,7 +2,7 @@
 package main
 
 import (
-        "fmt"
+    "fmt"
 	"github.com/Grissess/sdnd16/database"
 	"github.com/Grissess/sdnd16/utils"
 	"github.com/gyuho/goraph/graph"
@@ -14,7 +14,7 @@ func main() {
 	var address string
 	var name string
 	var nodeLabels []string
-	var topology *graph.DefaultGraph
+	var topology graph.Graph
 	var fileErr error
 
 	var input string

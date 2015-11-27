@@ -10,13 +10,13 @@ import (
 	"bufio"
 	"github.com/gyuho/goraph/graph"
 	"os"
-        "fmt"
+    "fmt"
 	"strconv"
 	"strings"
 )
 
 //Reads in a topology file with the structure src,dst,weight for every edge
-func ReadFileToGraph(filename string) (*graph.DefaultGraph, error) {
+func ReadFileToGraph(filename string) (graph.Graph, error) {
 
 	f, err := os.Open(filename)
 
@@ -71,7 +71,7 @@ func ReadFileToGraph(filename string) (*graph.DefaultGraph, error) {
 }
 
 //Returns an array of strings containing the labels of all nodes in the graph.
-func GetLabelList(g *graph.DefaultGraph) []string {
+func GetLabelList(g graph.Graph) []string {
 	vertices := g.GetVertices()
 
 	labels := make([]string, 0, len(vertices))
@@ -83,7 +83,7 @@ func GetLabelList(g *graph.DefaultGraph) []string {
 }
 
 //Returns a map of strings, mapping the labels of each node in the graph to a unique number
-func GetLabelMap(g *graph.DefaultGraph) map[string]int {
+func GetLabelMap(g graph.Graph) map[string]int {
 	vertices := g.GetVertices()
 
 	labels := make([]string, 0, len(vertices))
@@ -100,7 +100,7 @@ func GetLabelMap(g *graph.DefaultGraph) map[string]int {
 }
 
 //Returns a map of strings mapping the labels of nodes to their neighbors.
-func GetNeighborMap(g *graph.DefaultGraph) (map[string]string, error) {
+func GetNeighborMap(g graph.Graph) (map[string]string, error) {
 	labels := GetLabelList(g)
 	neighborMap := make(map[string]string)
 	for i := 0; i < len(labels); i = i + 1 {
@@ -121,7 +121,7 @@ func GetNeighborMap(g *graph.DefaultGraph) (map[string]string, error) {
 
 func ToDot(grph graph.Graph, directed bool) string {
          lines := make([]string, 0);
-         var sep string; 
+         var sep string;
          if directed {
                  lines = append(lines, "digraph {");
                  sep = "->";

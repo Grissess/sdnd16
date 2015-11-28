@@ -2,12 +2,25 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 	"github.com/Grissess/sdnd16/database"
 	"github.com/Grissess/sdnd16/utils"
 	"github.com/gyuho/goraph/graph"
 	"strings"
+    "math"
 )
+
+func getIntermediatePaths(mainPath []string, distances map[string]float64) {
+    length := len(mainPath)
+    for i := 1; i < (length - 1); i++ {
+        for j := 0; (j + i) < length; j++ {
+            path := strings.Join(mainPath[j:(j + i + 1)], " ")
+            dist := math.Abs(distances[mainPath[j+i]] - distances[mainPath[j]])
+            fmt.Printf("%s | %d\n", path, int(dist))
+        }
+    }
+}
+
 func main() {
 
 	var filename string
@@ -63,7 +76,9 @@ func main() {
 					dest = nodeLabels[j]
 					paths, distance, _ := graph.Dijkstra(topology, src, dest)
 					path := strings.Join(paths[1:], " ")
-					rdb.SetPath(src, dest, fmt.Sprintf("%s %s | %d", src, path, int(distance[dest])))
+					fmt.Printf("### %s %s | %d\n", src, path, int(distance[dest]))
+                    getIntermediatePaths(paths, distance)
+                    rdb.SetPath(src, dest, fmt.Sprintf("%s %s | %d", src, path, int(distance[dest])))
 				}
 			}
 		}
@@ -74,38 +89,38 @@ func main() {
 		rdb.Disconnect()
 
 	} else if input == "grab" {
-                fmt.Print("enter topology name > ")
+		fmt.Print("enter topology name > ")
 		fmt.Scanln(&name)
-                fmt.Print("enter address and port of database > ")
+		fmt.Print("enter address and port of database > ")
 		fmt.Scanln(&address)
 
 		if address == "" {
 			fmt.Println("- no address specified, using default database")
 			address = "128.153.144.171:6379"
 		}
-                rdb,err := database.NewRoutingDatabaseFromDB(name, "tcp", address)
-                if err != nil {
+		rdb, err := database.NewRoutingDatabaseFromDB(name, "tcp", address)
+		if err != nil {
 			panic(err)
 		}
 		fmt.Println("Connected")
-                        var src, dest string
+		var src, dest string
 
-                for{
-                        fmt.Print("Enter a first node > ")
-                        fmt.Scanln(&input)
-                        src = input
-                        fmt.Print("Enter a second node > ")
-                        fmt.Scanln(&input)
-                        dest = input
+		for {
+			fmt.Print("Enter a first node > ")
+			fmt.Scanln(&input)
+			src = input
+			fmt.Print("Enter a second node > ")
+			fmt.Scanln(&input)
+			dest = input
 
-                        path, DBerr := rdb.GetPathFromDB(src, dest)
-                        if DBerr != nil{
-                                panic(DBerr)
-                        }
+			path, DBerr := rdb.GetPathFromDB(src, dest)
+			if DBerr != nil {
+				panic(DBerr)
+			}
 
-                        fmt.Println("The shortest path is: ", path);
-                }
-                rdb.Disconnect()
+			fmt.Println("The shortest path is: ", path)
+		}
+		rdb.Disconnect()
 	} else {
 		fmt.Println("invalid input program terminated")
 	}

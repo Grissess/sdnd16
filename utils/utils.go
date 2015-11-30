@@ -10,7 +10,7 @@ import (
 	"bufio"
 	"github.com/gyuho/goraph/graph"
 	"os"
-    "fmt"
+	"fmt"
 	"strconv"
 	"strings"
 )

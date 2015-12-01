@@ -4,20 +4,19 @@ package algorithms
 
 import (
 	"fmt"
-	"strings"
+	"math"
 	"github.com/gonum/graph"
 	"github.com/gonum/graph/simple"
-	"github.com/gonum/graph/path"
 	"github.com/eapache/queue"
 )
 
 // Builds a BFS tree (as a directed graph) from the given graph and start node.
 func BFSTree(g graph.Graph, start graph.Node) *simple.DirectedGraph {
 	if !g.Has(start) {
-		panic(fmt.Sprintf("BFSTree: Start node %r not in graph %r", start, g);
+		panic(fmt.Sprintf("BFSTree: Start node %r not in graph %r", start, g));
 	}
 
-	ret := simple.NewDirectedGraph(0.0, 0.0);
+	ret := simple.NewDirectedGraph(0.0, math.Inf(1));
 	seen := make(map[int]bool);
 	q := queue.New();
 	q.Add(start);

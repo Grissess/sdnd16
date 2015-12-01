@@ -2,19 +2,26 @@ package main
 
 import(
 	"fmt"
-	"github.com/gyuho/goraph/graph"
-	"github.com/Grissess/sdnd16/reader"
-	"github.com/Grissess/sdnd16/algorithms"
+	// "github.com/gonum/graph"
+	"github.com/gonum/graph/encoding/dot"
+	"github.com/Grissess/sdnd16/utils"
+	// "github.com/Grissess/sdnd16/algorithms"
 )
 
 func main(){
-        var g *graph.DefaultGraph
-        g, _ = reader.ReadFileToGraph("topology.txt")
-        fmt.Println(g.String())
-		fmt.Println(multipath.ToDot(g, false));
-
-		paths := multipath.Yen(g, "1", "5", 5);
-        fmt.Println(paths)
-
-		fmt.Println(g.String())
+	g, labels, err1 := utils.ReadFileToGraph("topology.txt")
+	if err1 != nil {
+		fmt.Println("ReadFileToGraph:");
+		fmt.Println(err1);
+		return;
+	}
+	labels = labels;
+	// fmt.Println(g);
+	bytes, err2 := dot.Marshal(g, "", "", "  ", false)
+	if err2 != nil {
+		fmt.Println("dot.Marshall:");
+		fmt.Println(err1);
+		return;
+	}
+	fmt.Println(string(bytes));
 }

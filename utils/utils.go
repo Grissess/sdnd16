@@ -9,19 +9,19 @@ package utils
 import (
 	"bufio"
 	"github.com/gonum/graph"
+	"github.com/gonum/graph/simple"
 	"os"
-	"fmt"
+	"math"
 	"strconv"
-	"strings"
 )
 
 //Reads in a topology file with the structure src,dst,weight for every edge
-func ReadFileToGraph(filename string) (graph.UndirectedGraph, error) {
+func ReadFileToGraph(filename string) (*simple.UndirectedGraph, map[int]string, error) {
 
 	f, err := os.Open(filename)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	scanner := bufio.NewScanner(f)
@@ -33,102 +33,109 @@ func ReadFileToGraph(filename string) (graph.UndirectedGraph, error) {
 		result = append(result, x)
 	}
 
-	var srcs, dests, weights []string
+	var srcs, dsts, weights []string
 
 	for i := 0; i < len(result); i = i + 3 {
 		srcs = append(srcs, result[i])
 	}
 	for i := 1; i < len(result); i = i + 3 {
-		dests = append(dests, result[i])
+		dsts = append(dsts, result[i])
 	}
 
 	for i := 2; i < len(result); i = i + 3 {
 		weights = append(weights, result[i])
 	}
 
-	g := graph.NewDefaultGraph()
+	g := simple.NewUndirectedGraph(0.0, math.Inf(1))
+	labels := make(map[int]string)
+	revlabels := make(map[string]int)
+	ctr := 0;
 
-	for i := 0; i < len(srcs); i++ {
-        cost, err := strconv.Atoi(weights[i])
-		if err != nil {
-			return g, err
+	for i := 0; i < len(srcs); i = i + 1 {
+		sid, sok := revlabels[srcs[i]];
+		did, dok := revlabels[dsts[i]];
+		if !sok {
+			sid = ctr;
+			g.AddNode(simple.Node(sid));
+			labels[sid] = srcs[i];
+			revlabels[srcs[i]] = sid;
+			ctr++;
 		}
-        g.SetEdge(Edge{F: srcs[i], T: dests[i], W: cost})
-    }
+		if !dok {
+			did = ctr;
+			g.AddNode(simple.Node(did));
+			labels[did] = dsts[i];
+			revlabels[dsts[i]] = did;
+			ctr++;
+		}
 
-	return g, nil
+		cost, err1 := strconv.ParseFloat(weights[i], 64)
+		if err1 != nil {
+			return g, labels, err1
+		}
+
+		g.SetEdge(simple.Edge{F: simple.Node(sid), T: simple.Node(did), W: cost});
+	}
+
+	return g, labels, nil
 }
 
-/*
+// Reverses the label map (id est, reverse lookups from name to ID)
+func GetRevLabels(labels map[int]string) map[string]int {
+	revlabels := make(map[string]int);
+	for k, v := range(labels) {
+		revlabels[v] = k;
+	}
+	return revlabels;
+}
+
 //Returns an array of strings containing the labels of all nodes in the graph.
-func GetLabelList(g graph.Graph) []string {
-	vertices := g.GetVertices()
+// This should be a (possibly improper) subset of the values of labels.
+func GetLabelList(g graph.Graph, labels map[int]string) []string {
+	nodes := g.Nodes();
 
-	labels := make([]string, 0, len(vertices))
-	for key := range vertices {
-		labels = append(labels, key)
+	ret := make([]string, 0, len(nodes))
+	for _, node := range nodes {
+		ret = append(ret, labels[node.ID()])
 	}
 
-	return labels
-}
-
-//Returns a map of strings, mapping the labels of each node in the graph to a unique number
-func GetLabelMap(g graph.Graph) map[string]int {
-	vertices := g.GetVertices()
-
-	labels := make([]string, 0, len(vertices))
-	for key := range vertices {
-		labels = append(labels, key)
-	}
-
-	node_labels := make(map[string]int)
-	for i := 0; i < len(labels); i = i + 1 {
-		node_labels[labels[i]] = i
-	}
-
-	return node_labels
+	return ret
 }
 
 //Returns a map of strings mapping the labels of nodes to their neighbors.
-func GetNeighborMap(g graph.Graph) (map[string]string, error) {
-	labels := GetLabelList(g)
-	neighborMap := make(map[string]string)
-	for i := 0; i < len(labels); i = i + 1 {
-		neighbors, err := g.GetParents(labels[i])
-		if err != nil {
-			return neighborMap, err
+func GetNeighborMap(g graph.Graph) map[int][]int {
+	nodes := g.Nodes();
+	neighborMap := make(map[int][]int);
+	for _, node := range(nodes) {
+		neighborMap[node.ID()] = make([]int, 0);
+		neighbors := g.From(node);
+		for _, neighbor := range neighbors {
+			neighborMap[node.ID()] = append(neighborMap[node.ID()], neighbor.ID())
 		}
-		neighborLabels := make([]string, 0, len(neighbors))
-		for key := range neighbors {
-			neighborLabels = append(neighborLabels, key)
-		}
-
-		neighborMap[labels[i]] = strings.Join(neighborLabels, " ")
 	}
 
-	return neighborMap, nil
+	return neighborMap
 }
 
-func ToDot(grph graph.Graph, directed bool) string {
-         lines := make([]string, 0);
-         var sep string;
-         if directed {
-                 lines = append(lines, "digraph {");
-                 sep = "->";
-         } else {
-                 lines = append(lines, "strict graph {");
-                 sep = "--";
-         }
-         nodes := grph.GetVertices();
-         for node, _ := range(nodes) {
-                 lines = append(lines, fmt.Sprintf("\"%s\"", node));
-                 children, _ := grph.GetChildren(node);
-                 for child, _ := range(children) {
-                         weight, _ := grph.GetWeight(node, child);
-                         lines = append(lines, fmt.Sprintf("\"%s\" %s \"%s\" [label=\"%f\"]", node, sep, child, weight));
-                 }
-         }
-         lines = append(lines, "}");
-         return strings.Join(lines, "\n");
-}
-*/
+//func ToDot(grph graph.Graph, directed bool) string {
+//         lines := make([]string, 0);
+//         var sep string;
+//         if directed {
+//                 lines = append(lines, "digraph {");
+//                 sep = "->";
+//         } else {
+//                 lines = append(lines, "strict graph {");
+//                 sep = "--";
+//         }
+//         nodes := grph.GetVertices();
+//         for node, _ := range(nodes) {
+//                 lines = append(lines, fmt.Sprintf("\"%s\"", node));
+//                 children, _ := grph.GetChildren(node);
+//                 for child, _ := range(children) {
+//                         weight, _ := grph.GetWeight(node, child);
+//                         lines = append(lines, fmt.Sprintf("\"%s\" %s \"%s\" [label=\"%f\"]", node, sep, child, weight));
+//                 }
+//         }
+//         lines = append(lines, "}");
+//         return strings.Join(lines, "\n");
+//}

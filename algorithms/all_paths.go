@@ -1,12 +1,12 @@
 // All-paths implementation adapter
 
+package algorithms
+
 import (
 	"fmt"
 	"strings"
 	"github.com/gonum/graph"
-	"github.com/gonum/graph/simple"
 	"github.com/gonum/graph/path"
-	"github.com/eapache/queue"
 )
 
 // Structure to represent a single path on the graph from paths[0] to paths[len(paths)-1]
@@ -16,7 +16,7 @@ type Path struct {
 }
 
 // Returns the canonical representation of a path given a map from node IDs to string labels
-func (p Path) PathString(labels map[int]string) {
+func (p Path) PathString(labels map[int]string) string {
 	pathlen := len(p.path);
 	names := make([]string, pathlen + 2);
 	for idx, node := range(p.path) {
@@ -33,14 +33,14 @@ func ConvertAllPaths(g graph.Graph, ap path.AllShortest) map[int]map[int]Path {
 	nodes := g.Nodes();
 	ret := make(map[int]map[int]Path);
 
-	for startidx, start := range(nodes) {
+	for _, start := range(nodes) {
 		pathmap :=  make(map[int]Path);
 		ret[start.ID()] = pathmap;
 		for _, end := range(nodes) {
 			if start == end {
 				continue;
 			}
-			path, weight, uniq := ap.Between(start, end);
+			path, weight, _ := ap.Between(start, end);
 			pathmap[end.ID()] = Path{path: path, weight: weight};
 		}
 	}

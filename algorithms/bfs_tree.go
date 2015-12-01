@@ -1,5 +1,7 @@
 // Simple implementions of convenient algorithms on graphs
 
+package algorithms
+
 import (
 	"fmt"
 	"strings"

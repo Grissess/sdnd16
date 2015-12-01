@@ -4,7 +4,7 @@ import(
 	"fmt"
 	"github.com/gyuho/goraph/graph"
 	"github.com/Grissess/sdnd16/reader"
-	"github.com/Grissess/sdnd16/multipath"
+	"github.com/Grissess/sdnd16/algorithms"
 )
 
 func main(){

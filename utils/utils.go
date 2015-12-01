@@ -8,7 +8,7 @@ package utils
 
 import (
 	"bufio"
-	"github.com/gyuho/goraph/graph"
+	"github.com/gonum/graph"
 	"os"
 	"fmt"
 	"strconv"
@@ -16,7 +16,7 @@ import (
 )
 
 //Reads in a topology file with the structure src,dst,weight for every edge
-func ReadFileToGraph(filename string) (graph.Graph, error) {
+func ReadFileToGraph(filename string) (graph.UndirectedGraph, error) {
 
 	f, err := os.Open(filename)
 
@@ -48,28 +48,18 @@ func ReadFileToGraph(filename string) (graph.Graph, error) {
 
 	g := graph.NewDefaultGraph()
 
-	for i := 0; i < len(srcs); i = i + 1 {
-		g.AddVertex(srcs[i])
-		g.AddVertex(dests[i])
-
-		cost, err1 := strconv.Atoi(weights[i])
-		if err1 != nil {
-			return g, err1
+	for i := 0; i < len(srcs); i++ {
+        cost, err := strconv.Atoi(weights[i])
+		if err != nil {
+			return g, err
 		}
-
-		err2 := g.AddEdge(srcs[i], dests[i], float64(cost))
-		err3 := g.AddEdge(dests[i], srcs[i], float64(cost))
-		if err2 != nil {
-			return g, err2
-		}
-		if err3 != nil {
-			return g, err3
-		}
-	}
+        g.SetEdge(Edge{F: srcs[i], T: dests[i], W: cost})
+    }
 
 	return g, nil
 }
 
+/*
 //Returns an array of strings containing the labels of all nodes in the graph.
 func GetLabelList(g graph.Graph) []string {
 	vertices := g.GetVertices()
@@ -141,3 +131,4 @@ func ToDot(grph graph.Graph, directed bool) string {
          lines = append(lines, "}");
          return strings.Join(lines, "\n");
 }
+*/

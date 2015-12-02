@@ -103,14 +103,14 @@ func GetLabelList(g graph.Graph, labels map[int]string) []string {
 }
 
 //Returns a map of strings mapping the labels of nodes to their neighbors.
-func GetNeighborMap(g graph.Graph) map[int][]int {
+func GetNeighborMap(g graph.Graph) map[int]map[int]int {
 	nodes := g.Nodes();
-	neighborMap := make(map[int][]int);
+	neighborMap := make(map[int]map[int]int);
 	for _, node := range(nodes) {
-		neighborMap[node.ID()] = make([]int, 0);
+		neighborMap[node.ID()] = make(map[int]int);
 		neighbors := g.From(node);
 		for _, neighbor := range neighbors {
-			neighborMap[node.ID()] = append(neighborMap[node.ID()], neighbor.ID())
+			neighborMap[node.ID()][neighbor.ID()] = int(g.Edge(node, neighbor).Weight());
 		}
 	}
 

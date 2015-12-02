@@ -94,7 +94,11 @@ func DatabaseExists(dbName string, network string, address string) (bool, error)
 }
 
 func ConnectToDatabase(dbName string, network string, address string) (RoutingDatabase, error) {
-    rdb := RoutingDatabase{name: dbName, connection: nil, ids: make(map[string]int), labels: make(map[int]string), initialized: false, size: -1}
+    conn, err := redis.Dial(network, address)
+    rdb := RoutingDatabase{name: dbName, connection: conn, ids: make(map[string]int), labels: make(map[int]string), initialized: false, size: -1}
+    if err != nil {
+        return rdb, err
+    }
     result, err := DatabaseExists(dbName, network, address)
     if err != nil {
         return rdb, err
@@ -103,6 +107,7 @@ func ConnectToDatabase(dbName string, network string, address string) (RoutingDa
 		return rdb, errors.New("RoutingDatabase: Specified database does not exist")
 	}
     err = rdb.getLabels()
+    rdb.initialized = true
 	return rdb, err
 }
 

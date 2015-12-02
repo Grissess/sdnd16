@@ -71,9 +71,10 @@ func EraseDatabase(dbName string, network string, address string) error {
 		return err
 	}
 	_, err = db.Do("DEL", dbName)
-	if err != nil {
+    if err != nil {
 		return err
 	}
+    _, err = db.Do("SREM", "{topologies}", dbName)
 	db.Close()
 	return nil
 }

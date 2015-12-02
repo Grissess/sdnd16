@@ -51,7 +51,7 @@ func ReadFileToGraph(filename string) (*simple.UndirectedGraph, map[int]string, 
 	revlabels := make(map[string]int)
 	ctr := 0;
 
-	for i := 0; i < len(srcs); i = i + 1 {
+	for i := 0; i < len(srcs); i++ {
 		sid, sok := revlabels[srcs[i]];
 		did, dok := revlabels[dsts[i]];
 		if !sok {

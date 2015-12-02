@@ -22,6 +22,14 @@ func main() {
 	idMap["charlie"] = 2
 	idMap["delta"] = 3
 
+    topologyMap := make(map[int]map[int]int)
+    for i := 0; i < 4; i++ {
+        topologyMap[i] = make(map[int]int)
+        for j := 0; j < 4; j++ {
+            topologyMap[i][j] = (i + j)
+        }
+    }
+
 	pathMap := make(map[int]map[int]string)
 	for i := 0; i < 4; i++ {
 		pathMap[i] = make(map[int]string)
@@ -42,7 +50,7 @@ func main() {
 		panic(err)
 	}
 
-    rdb, err := database.NewRoutingDatabase(dbName, "tcp", address, idMap, pathMap)
+    rdb, err := database.NewRoutingDatabase(dbName, "tcp", address, idMap, pathMap, topologyMap)
 
 	if err != nil {
 		panic(err)

@@ -1,8 +1,7 @@
 /*
 * CS350 Team 5 - shortests route for a given network topology
-* Iteration 4 - graph data storage
 * David Josephs and Killian Coddington
- */
+*/
 
 // A package developed to ease interaction between topology information and a redis database.
 package database
@@ -10,7 +9,9 @@ package database
 import (
 	"errors"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
+    "strings"
+    "strconv"
+    "github.com/garyburd/redigo/redis"
 )
 
 const uninitializedPath = ""
@@ -29,7 +30,7 @@ type RoutingDatabase struct {
 // Create a new routing database structure with a given name,
 // a connection to a redis database specified by a network type and an ip address,
 // and a map from strings to ints indicating unique ids for string labels.
-func NewRoutingDatabase(dbName string, network string, address string, ids map[string]int, paths map[int]map[int]string) (RoutingDatabase, error) {
+func NewRoutingDatabase(dbName string, network string, address string, ids map[string]int, paths map[int]map[int]string, topology map[int]map[int]int) (RoutingDatabase, error) {
 	rdb := RoutingDatabase{name: dbName, connection: nil, ids: make(map[string]int), labels: make(map[int]string), initialized: false, size: -1}
 	err := rdb.connect(network, address)
 	if err != nil {
@@ -39,8 +40,37 @@ func NewRoutingDatabase(dbName string, network string, address string, ids map[s
     rdb.setIds(ids)
 	rdb.setLabels()
 	rdb.setPaths(paths)
+    rdb.setTopology(topology)
 	rdb.initialized = true
 	return rdb, nil
+}
+
+func (self *RoutingDatabase) setTopology(topology map[int]map[int]int) {
+    for i := range topology {
+        neighbors := make([]string, 2 * len(topology[i]))
+        for j := range topology[i] {
+            neighbors[(2*j)] = strconv.Itoa(j)
+            neighbors[(2*j)+1] = strconv.Itoa(topology[i][j])
+        }
+        self.connection.Do("HSET", self.name, fmt.Sprintf("|%d|", i), strings.Join(neighbors, " "))
+    }
+}
+
+func (self *RoutingDatabase) GetTopology() (map[int]map[int]int, error) {
+    topology := make(map[int]map[int]int)
+    for i := 0; i < self.size; i++ {
+        neighbor, err := redis.String(self.connection.Do("HGET", self.name, fmt.Sprintf("|%d|", i)))
+        if err != nil {
+            return topology, err
+        }
+        array := strings.Split(neighbor, " ")
+        for j := 0; j < (len(array) / 2); j++ {
+            a, _ := strconv.Atoi(array[2*j])
+            b, _ := strconv.Atoi(array[(2*j) + 1])
+            topology[a][j] = b
+        }
+    }
+    return topology, nil
 }
 
 func (self *RoutingDatabase) saveName() {
@@ -76,7 +106,7 @@ func EraseDatabase(dbName string, network string, address string) error {
 	}
     _, err = db.Do("SREM", "{topologies}", dbName)
 	db.Close()
-	return nil
+	return err
 }
 
 func DatabaseExists(dbName string, network string, address string) (bool, error) {

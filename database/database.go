@@ -46,11 +46,11 @@ func NewRoutingDatabase(dbName string, network string, address string, ids map[s
 }
 
 func (self *RoutingDatabase) setTopology(topology map[int]map[int]int) {
-    for i := range topology {
-        neighbors := make([]string, 2 * len(topology[i]))
-        for j := range topology[i] {
-            neighbors[(2*j)] = strconv.Itoa(j)
-            neighbors[(2*j)+1] = strconv.Itoa(topology[i][j])
+    for i, neighmap := range topology {
+        neighbors := make([]string, 0, 2 * len(neighmap))
+        for neighbor, cost := range neighmap {
+			neighbors = append(neighbors, strconv.Itoa(neighbor))
+			neighbors = append(neighbors, strconv.Itoa(cost))
         }
         self.connection.Do("HSET", self.name, fmt.Sprintf("|%d|", i), strings.Join(neighbors, " "))
     }
@@ -63,11 +63,12 @@ func (self *RoutingDatabase) GetTopology() (map[int]map[int]int, error) {
         if err != nil {
             return topology, err
         }
+		topology[i] = make(map[int]int)
         array := strings.Split(neighbor, " ")
         for j := 0; j < (len(array) / 2); j++ {
             a, _ := strconv.Atoi(array[2*j])
             b, _ := strconv.Atoi(array[(2*j) + 1])
-            topology[a][j] = b
+            topology[i][a] = b
         }
     }
     return topology, nil

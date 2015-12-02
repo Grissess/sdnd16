@@ -7,6 +7,6 @@
 		<p>Raw result: {{.Rawpath}}</p>
 		<p>Full path: {{range .Path}}{{.}} -> {{end}}</p>
 		<p>Cost: {{.Cost}}</p>
-		<img src="/render/path/{{.Netpath}}" alt="SVG path"/>
+		<img src="/render/path/{{.Dbname}}/{{.Netpath}}" alt="SVG path"/>
 	</body>
 </html>

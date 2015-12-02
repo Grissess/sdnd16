@@ -116,3 +116,20 @@ func GetNeighborMap(g graph.Graph) map[int]map[int]int {
 
 	return neighborMap
 }
+
+// Reconstruct a graph from adjacency maps
+func GraphFromNeighborMap(adjmap map[int]map[int]int) graph.Graph {
+	g := simple.NewUndirectedGraph(0.0, math.Inf(1));
+	for srcid, neighmap := range(adjmap) {
+		if !g.Has(simple.Node(srcid)) {
+			g.AddNode(simple.Node(srcid))
+		}
+		for dstid, cost := range(neighmap) {
+			if !g.Has(simple.Node(dstid)) {
+				g.AddNode(simple.Node(dstid))
+			}
+			g.SetEdge(simple.Edge{F: simple.Node(srcid), T: simple.Node(dstid), W: float64(cost)})
+		}
+	}
+	return g
+}

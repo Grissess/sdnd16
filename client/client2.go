@@ -97,7 +97,7 @@ func main() {
                                 realPathMap[k] = newMap
                         }
 
-                        db, DBerr = database.NewRoutingDatabase(recordName, "tcp", ipAddress, revLabels, realPathMap)
+                        db, DBerr = database.NewRoutingDatabase(recordName, "tcp", ipAddress, revLabels, realPathMap, utils.GetNeighborMap(g))
 
                          if DBerr != nil {
                                 panic(DBerr)

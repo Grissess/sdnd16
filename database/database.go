@@ -35,11 +35,29 @@ func NewRoutingDatabase(dbName string, network string, address string, ids map[s
 	if err != nil {
 		return rdb, err
 	}
-	rdb.setIds(ids)
+	rdb.saveName()
+    rdb.setIds(ids)
 	rdb.setLabels()
 	rdb.setPaths(paths)
 	rdb.initialized = true
 	return rdb, nil
+}
+
+func (self *RoutingDatabase) saveName() {
+    self.connection.Do("SADD", "{topologies}", self.name)
+}
+
+func GetAllDatabases(network string, address string) ([]string, error) {
+    db, err := redis.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+    databases, err := redis.Strings(db.Do("SMEMBERS", "{topologies}"))
+	if err != nil {
+		return nil, err
+	}
+	db.Close()
+	return databases, nil
 }
 
 func (self *RoutingDatabase) CloseConnection() error {

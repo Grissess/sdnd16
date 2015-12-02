@@ -17,8 +17,8 @@ func main() {
 
         fmt.Println("Welcome to the NRA System, written in golang")
         fmt.Println("Enter IP address and port of the database server you'd like to use")
-        fmt.Println("If none is entered, the default server will be used (testing only)")
-        fmt.Print("     IP address and port >> ")
+        fmt.Println("If none is entered, the default server will be used (testing only)\n")
+        fmt.Print("IP address and port >> ")
         fmt.Scanln(&ipAddress)
 
         if ipAddress == "" {
@@ -26,7 +26,7 @@ func main() {
                 ipAddress = "128.153.144.171:6379"
         }
 
-        fmt.Print("     Enter the name of the database record you wish to use >> ")
+        fmt.Print("Enter the name of the database record you wish to use >> ")
         fmt.Scanln(&recordName)
 
         exists, DBerr :=  database.DatabaseExists(recordName, "tcp", ipAddress)
@@ -36,7 +36,7 @@ func main() {
         }
 
         if exists {
-                fmt.Println("   This record exists!")
+                fmt.Println("This record exists!")
                 db, DBerr = database.ConnectToDatabase(recordName, "tcp", ipAddress)
 
                 if DBerr != nil {
@@ -45,12 +45,12 @@ func main() {
                 queryPaths(db)
 
        } else {
-                fmt.Println("   This record does not exist.  Please check your spelling")
-                fmt.Print("   Would you like to create a record by this name? [Y/N] >> ")
+                fmt.Println("This record does not exist.  Please check your spelling")
+                fmt.Print("Would you like to create a record by this name? [Y/N] >> ")
                 fmt.Scanln(&input)
 
                 if input ==  "Y" || input == "y" {
-                        fmt.Print("   Give me the name of a topology file >> ")
+                        fmt.Print("Give me the name of a topology file >> ")
                         fmt.Scanln(&filename)
                         g, labels, Uerror := utils.ReadFileToGraph(filename)
 
@@ -83,8 +83,8 @@ func main() {
                         queryPaths(db)
 
                 } else {
-                        fmt.Println("   Very well.")
-                        fmt.Println("   Thank you for using golang NRA!")
+                        fmt.Println("Very well.")
+                        fmt.Println("Thank you for using golang NRA!")
                 }
         }
 }
@@ -93,21 +93,22 @@ func queryPaths(db database.RoutingDatabase) {
         var input, src, dst string
 
         for {
-                fmt.Print("   Get node paths? [Y/N] >> ")
+                fmt.Print("Get node paths? [Y/N] >> ")
                 fmt.Scanln(&input)
                 if input == "y" || input == "Y" {
-                        fmt.Print("   Enter a first node >> ")
+                        fmt.Print("Enter a first node >> ")
                         fmt.Scanln(&src)
-                        fmt.Print("   Enter a second node >>")
+                        fmt.Print("Enter a second node >>")
                         fmt.Scanln(&dst)
                         path, DBerr := db.GetPath(src, dst)
 
-                        fmt.Println("   The shortest path is: ", path)
                         if DBerr != nil {
-                                panic(DBerr)
+                                fmt.Println(DBerr)
+                        } else {
+                        fmt.Println("The shortest path is: ", path)
                         }
                  }else {
-                                fmt.Println("   Thank you for using golang NRA!")
+                                fmt.Println("Thank you for using golang NRA!")
                                 break
                  }
         }

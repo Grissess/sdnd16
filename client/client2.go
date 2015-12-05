@@ -43,7 +43,7 @@ func main() {
         color.Unset()
         fmt.Scanln(&recordName)
 
-        exists, DBerr :=  database.DatabaseExists(recordName, "tcp", ipAddress)
+        exists, DBerr :=  database.TopologyExists(recordName, "tcp", ipAddress)
 
         if DBerr != nil {
                 panic(DBerr)

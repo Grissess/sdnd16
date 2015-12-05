@@ -34,7 +34,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 func view_search(w http.ResponseWriter, r *http.Request) {
-	dbs, err := database.GetAllDatabases(db_network, db_address)
+	dbs, err := database.GetAllTopologies(db_network, db_address)
 	if err != nil {
 		t_error.Execute(w, err)
 		return

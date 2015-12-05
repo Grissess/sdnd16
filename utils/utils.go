@@ -10,12 +10,12 @@ import (
 	"bufio"
 	"github.com/gonum/graph"
 	"github.com/gonum/graph/simple"
-	"os"
 	"math"
+	"os"
 	"strconv"
 )
 
-//Reads in a topology file with the structure src,dst,weight for every edge
+// Reads in a topology file with the structure src,dst,weight for every edge
 func ReadFileToGraph(filename string) (*simple.UndirectedGraph, map[int]string, error) {
 
 	f, err := os.Open(filename)
@@ -49,24 +49,24 @@ func ReadFileToGraph(filename string) (*simple.UndirectedGraph, map[int]string, 
 	g := simple.NewUndirectedGraph(0.0, math.Inf(1))
 	labels := make(map[int]string)
 	revlabels := make(map[string]int)
-	ctr := 0;
+	ctr := 0
 
 	for i := 0; i < len(srcs); i++ {
-		sid, sok := revlabels[srcs[i]];
-		did, dok := revlabels[dsts[i]];
+		sid, sok := revlabels[srcs[i]]
+		did, dok := revlabels[dsts[i]]
 		if !sok {
-			sid = ctr;
-			g.AddNode(simple.Node(sid));
-			labels[sid] = srcs[i];
-			revlabels[srcs[i]] = sid;
-			ctr++;
+			sid = ctr
+			g.AddNode(simple.Node(sid))
+			labels[sid] = srcs[i]
+			revlabels[srcs[i]] = sid
+			ctr++
 		}
 		if !dok {
-			did = ctr;
-			g.AddNode(simple.Node(did));
-			labels[did] = dsts[i];
-			revlabels[dsts[i]] = did;
-			ctr++;
+			did = ctr
+			g.AddNode(simple.Node(did))
+			labels[did] = dsts[i]
+			revlabels[dsts[i]] = did
+			ctr++
 		}
 
 		cost, err1 := strconv.ParseFloat(weights[i], 64)
@@ -74,7 +74,7 @@ func ReadFileToGraph(filename string) (*simple.UndirectedGraph, map[int]string, 
 			return g, labels, err1
 		}
 
-		g.SetEdge(simple.Edge{F: simple.Node(sid), T: simple.Node(did), W: cost});
+		g.SetEdge(simple.Edge{F: simple.Node(sid), T: simple.Node(did), W: cost})
 	}
 
 	return g, labels, nil
@@ -82,17 +82,17 @@ func ReadFileToGraph(filename string) (*simple.UndirectedGraph, map[int]string, 
 
 // Reverses the label map (id est, reverse lookups from name to ID)
 func GetRevLabels(labels map[int]string) map[string]int {
-	revlabels := make(map[string]int);
-	for k, v := range(labels) {
-		revlabels[v] = k;
+	revlabels := make(map[string]int)
+	for k, v := range labels {
+		revlabels[v] = k
 	}
-	return revlabels;
+	return revlabels
 }
 
-//Returns an array of strings containing the labels of all nodes in the graph.
+// Returns an array of strings containing the labels of all nodes in the graph.
 // This should be a (possibly improper) subset of the values of labels.
 func GetLabelList(g graph.Graph, labels map[int]string) []string {
-	nodes := g.Nodes();
+	nodes := g.Nodes()
 
 	ret := make([]string, 0, len(nodes))
 	for _, node := range nodes {
@@ -102,15 +102,15 @@ func GetLabelList(g graph.Graph, labels map[int]string) []string {
 	return ret
 }
 
-//Returns a map of strings mapping the labels of nodes to their neighbors.
+// Returns a map of strings mapping the labels of nodes to their neighbors.
 func GetNeighborMap(g graph.Graph) map[int]map[int]int {
-	nodes := g.Nodes();
-	neighborMap := make(map[int]map[int]int);
-	for _, node := range(nodes) {
-		neighborMap[node.ID()] = make(map[int]int);
-		neighbors := g.From(node);
+	nodes := g.Nodes()
+	neighborMap := make(map[int]map[int]int)
+	for _, node := range nodes {
+		neighborMap[node.ID()] = make(map[int]int)
+		neighbors := g.From(node)
 		for _, neighbor := range neighbors {
-			neighborMap[node.ID()][neighbor.ID()] = int(g.Edge(node, neighbor).Weight());
+			neighborMap[node.ID()][neighbor.ID()] = int(g.Edge(node, neighbor).Weight())
 		}
 	}
 
@@ -119,12 +119,12 @@ func GetNeighborMap(g graph.Graph) map[int]map[int]int {
 
 // Reconstruct a graph from adjacency maps
 func GraphFromNeighborMap(adjmap map[int]map[int]int) graph.Graph {
-	g := simple.NewUndirectedGraph(0.0, math.Inf(1));
-	for srcid, neighmap := range(adjmap) {
+	g := simple.NewUndirectedGraph(0.0, math.Inf(1))
+	for srcid, neighmap := range adjmap {
 		if !g.Has(simple.Node(srcid)) {
 			g.AddNode(simple.Node(srcid))
 		}
-		for dstid, cost := range(neighmap) {
+		for dstid, cost := range neighmap {
 			if !g.Has(simple.Node(dstid)) {
 				g.AddNode(simple.Node(dstid))
 			}

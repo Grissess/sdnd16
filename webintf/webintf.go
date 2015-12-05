@@ -26,6 +26,7 @@ var (
 	t_search = template.Must(template.ParseFiles(root + "search.gtpl"))
 	t_error = template.Must(template.ParseFiles(root + "error.gtpl"))
 	t_path = template.Must(template.ParseFiles(root + "path.gtpl"))
+	t_db = template.Must(template.ParseFiles(root + "db.gtpl"))
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -43,10 +44,6 @@ func view_search(w http.ResponseWriter, r *http.Request) {
 	if err2 != nil {
 		t_error.Execute(w, err2)
 	}
-}
-
-func view_db(w http.ResponseWriter, r *http.Request, dbname string) {
-	t_error.Execute(w, "Not implemented; db requested was "+dbname)
 }
 
 func view_node(w http.ResponseWriter, r *http.Request, dbname, node string) {
@@ -82,6 +79,23 @@ func view_path(w http.ResponseWriter, r *http.Request, dbname, srcnode, dstnode 
 	err3 := t_path.Execute(w, tinPath{Dbname: dbname, Rawpath: path, Path: pathpart, Netpath: strings.Join(pathpart, "/"), Cost: cost})
 	if err3 != nil {
 		t_error.Execute(w, err3)
+	}
+}
+
+type tinDb struct {
+	Database database.RoutingDatabase
+	Dbname string
+}
+
+func view_db(w http.ResponseWriter, r *http.Request, dbname string) {
+	db, err1 := database.ConnectToDatabase(dbname, db_network, db_address)
+	if err1 != nil {
+		t_error.Execute(w, err1)
+		return
+	}
+	err2 := t_db.Execute(w, tinDb{Dbname: dbname, Database: db})
+	if err2 != nil {
+		t_error.Execute(w, err2)
 	}
 }
 

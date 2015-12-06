@@ -1,4 +1,5 @@
 //The test client for this project, allows for storage and retrieval of information
+//Michael Fulton
 package main
 
 import (
@@ -116,7 +117,9 @@ func main() {
                 }
         }
 }
-
+/*
+queryPaths runs the looping structure for querying a database record for shortest paths.
+*/
 func queryPaths(db database.RoutingDatabase) {
         var input, src, dst string
 

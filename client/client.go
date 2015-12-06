@@ -5,124 +5,154 @@ import (
 	"fmt"
 	"github.com/Grissess/sdnd16/database"
 	"github.com/Grissess/sdnd16/utils"
-	"github.com/gyuho/goraph/graph"
-	"strings"
-    "math"
+        "github.com/Grissess/sdnd16/algorithms"
+        "github.com/gonum/graph/path"
+        "github.com/fatih/color"
 )
-
-func getIntermediatePaths(mainPath []string, distances map[string]float64) {
-    length := len(mainPath)
-    for i := 1; i < (length - 1); i++ {
-        for j := 0; (j + i) < length; j++ {
-            path := strings.Join(mainPath[j:(j + i + 1)], " ")
-            dist := math.Abs(distances[mainPath[j+i]] - distances[mainPath[j]])
-            fmt.Printf("%s | %d\n", path, int(dist))
-        }
-    }
-}
 
 func main() {
 
-	var filename string
-	var address string
-	var name string
-	var nodeLabels []string
-	var topology graph.Graph
-	var fileErr error
+        var ipAddress, recordName, filename, input string
+        var db database.RoutingDatabase
+        var DBerr error
 
-	var input string
-	fmt.Print("grab or store? > ")
-	fmt.Scanln(&input)
+        color.Set(color.FgHiGreen, color.Bold, color.BlinkSlow)
+        fmt.Println("\nWelcome to the NRA System, written in golang\n")
+        color.Unset()
 
-	if input == "store" {
 
-		fmt.Print("enter topology filename > ")
-		fmt.Scanln(&filename)
-		fmt.Print("enter topology name > ")
-		fmt.Scanln(&name)
-		fmt.Print("enter address and port of database > ")
-		fmt.Scanln(&address)
+        fmt.Println("Enter IP address and port of the database server you'd like to use")
+        fmt.Println("If none is entered, the default server will be used (testing only)\n")
+        color.Unset()
 
-		if address == "" {
-			fmt.Println("- no address specified, using default database")
-			address = "128.153.144.171:6379"
-		}
+        color.Set(color.FgWhite)
+        fmt.Print("IP address and port >> ")
+        color.Unset()
 
-		topology, fileErr = utils.ReadFileToGraph(filename)
+        fmt.Scanln(&ipAddress)
 
-		if fileErr != nil {
-			panic(fileErr)
-		}
-		nodeLabels = utils.GetLabelList(topology)
-		numberOfNodes := len(nodeLabels)
-		labelMap := utils.GetLabelMap(topology)
+        if ipAddress == "" {
+                color.Set(color.FgHiBlue)
+                fmt.Println("No ip address selected, using default database")
+                color.Unset()
+                ipAddress = "128.153.144.171:6379"
+        }
 
-		rdb, err := database.NewRoutingDatabase(name, "tcp", address, labelMap)
-		fmt.Println("Connecting to data base")
+        color.Set(color.FgWhite)
+        fmt.Print("Enter the name of the database record you wish to use >> ")
+        color.Unset()
+        fmt.Scanln(&recordName)
 
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("Connected")
+        exists, DBerr :=  database.TopologyExists(recordName, "tcp", ipAddress)
 
-		fmt.Println("Setting paths")
+        if DBerr != nil {
+                panic(DBerr)
+        }
 
-		var src, dest string
+        if exists {
+                color.Set(color.FgHiBlue)
+                fmt.Println("This record exists!\n")
+                color.Unset()
 
-		for i := 0; i < numberOfNodes; i++ {
-			for j := 0; j < numberOfNodes; j++ {
-				if i != j {
-					src = nodeLabels[i]
-					dest = nodeLabels[j]
-					paths, distance, _ := graph.Dijkstra(topology, src, dest)
-					path := strings.Join(paths[1:], " ")
-					fmt.Printf("### %s %s | %d\n", src, path, int(distance[dest]))
-                    getIntermediatePaths(paths, distance)
-                    rdb.SetPath(src, dest, fmt.Sprintf("%s %s | %d", src, path, int(distance[dest])))
-				}
-			}
-		}
+                db, DBerr = database.ConnectToDatabase(recordName, "tcp", ipAddress)
 
-		fmt.Println("Paths set, storing paths")
-		rdb.StorePathsInDB()
-		fmt.Println("Paths stored in data base")
-		rdb.Disconnect()
+                if DBerr != nil {
+                        panic(DBerr)
+                }
+                queryPaths(db)
 
-	} else if input == "grab" {
-		fmt.Print("enter topology name > ")
-		fmt.Scanln(&name)
-		fmt.Print("enter address and port of database > ")
-		fmt.Scanln(&address)
+       } else {
+                color.Set(color.FgHiBlue)
+                fmt.Println("This record does not exist.  Please check your spelling")
+                color.Set(color.FgWhite)
+                fmt.Print("Would you like to create a record by this name? [Y/N] >> ")
+                color.Unset()
+                fmt.Scanln(&input)
 
-		if address == "" {
-			fmt.Println("- no address specified, using default database")
-			address = "128.153.144.171:6379"
-		}
-		rdb, err := database.NewRoutingDatabaseFromDB(name, "tcp", address)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("Connected")
-		var src, dest string
+                if input ==  "Y" || input == "y" {
+                        color.Set(color.FgWhite)
+                        fmt.Print("Give me the name of a topology file >> ")
+                        color.Unset() 
 
-		for {
-			fmt.Print("Enter a first node > ")
-			fmt.Scanln(&input)
-			src = input
-			fmt.Print("Enter a second node > ")
-			fmt.Scanln(&input)
-			dest = input
+                        fmt.Scanln(&filename)
+                        g, labels, Uerror := utils.ReadFileToGraph(filename)
 
-			path, DBerr := rdb.GetPathFromDB(src, dest)
-			if DBerr != nil {
-				panic(DBerr)
-			}
+                        if Uerror != nil {
+                                panic(Uerror)
+                        }
 
-			fmt.Println("The shortest path is: ", path)
-		}
-		rdb.Disconnect()
-	} else {
-		fmt.Println("invalid input program terminated")
-	}
+                        revLabels := utils.GetRevLabels(labels)
+                        paths := path.DijkstraAllPaths(g)
+                        pathMap := algorithms.ConvertAllPaths(g, paths)
 
+                        realPathMap := make(map[int]map[int]string)
+
+                        for k  := range pathMap{
+                               smallMap := pathMap[k]
+                               newMap := make(map[int]string)
+                               for k2 := range  smallMap{
+                                        stringForPath := smallMap[k2].PathString(labels)
+                                        newMap[k2] = stringForPath
+                                }
+                                realPathMap[k] = newMap
+                        }
+
+                        db, DBerr = database.NewRoutingDatabase(recordName, "tcp", ipAddress, revLabels, realPathMap, utils.GetNeighborMap(g))
+
+                         if DBerr != nil {
+                                panic(DBerr)
+                        }
+
+                        color.Set(color.FgHiGreen, color.Bold)
+                        fmt.Println("Database created correctly!")
+                        color.Unset()
+
+                        queryPaths(db)
+
+                } else {
+                        color.Set(color.FgHiGreen, color.Bold)
+                        fmt.Println("Thank you for using golang NRA!")
+                        color.Unset()
+                }
+        }
+}
+
+func queryPaths(db database.RoutingDatabase) {
+        var input, src, dst string
+
+        for {
+                color.Set(color.FgWhite)
+                fmt.Print("Get node paths? [Y/N] >> ")
+                color.Unset()
+                fmt.Scanln(&input)
+                if input == "y" || input == "Y" {
+                        color.Set(color.FgWhite)
+                        fmt.Print("Enter a first node >> ")
+                        color.Unset()
+                        fmt.Scanln(&src)
+
+                        color.Set(color.FgWhite)
+                        fmt.Print("Enter a second node >>")
+                        color.Unset()
+                        fmt.Scanln(&dst)
+
+                        path, DBerr := db.GetPath(src, dst)
+
+                        if DBerr != nil {
+                                color.Set(color.FgHiRed, color.Bold)
+                                fmt.Println(DBerr, "\n")
+                                color.Unset()
+                        } else {
+                        color.Set(color.FgGreen, color.Bold)
+                        fmt.Println("The shortest path is: ", path, "\n")
+                        color.Unset()
+
+                        }
+                 }else {
+                                color.Set(color.FgHiGreen, color.Bold)
+                                fmt.Println("Thank you for using golang NRA!")
+                                color.Unset()
+                                break
+                 }
+        }
 }

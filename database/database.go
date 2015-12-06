@@ -220,9 +220,10 @@ func (self *RoutingDatabase) setPaths(paths map[int]map[int]string) {
 func (self *RoutingDatabase) getLabels() error {
 	var nodeLabel string
 	size, err := redis.Int(self.connection.Do("HGET", self.name, "{size}"))
-	if err != nil {
+    if err != nil {
 		return err
 	}
+    self.size = size
 	for i := 0; i < size; i++ {
 		nodeLabel, err = redis.String(self.connection.Do("HGET", self.name, fmt.Sprintf("{%d}", i)))
 		if err != nil {

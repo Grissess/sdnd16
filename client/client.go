@@ -1,5 +1,5 @@
-//The test client for this project, allows for storage and retrieval of information
-//Michael Fulton
+//The test client for this project, allows for storage and retrieval of information.
+// Written by Michael Fulton
 package main
 
 import (

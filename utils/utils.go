@@ -8,6 +8,7 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/gonum/graph"
 	"github.com/gonum/graph/simple"
 	"math"
@@ -104,6 +105,7 @@ func GetLabelList(g graph.Graph, labels map[int]string) []string {
 
 // Returns a map of strings mapping the labels of nodes to their neighbors.
 func GetNeighborMap(g graph.Graph) map[int]map[int]int {
+	fmt.Printf("GNM: From %v\n", g)
 	nodes := g.Nodes()
 	neighborMap := make(map[int]map[int]int)
 	for _, node := range nodes {
@@ -111,14 +113,18 @@ func GetNeighborMap(g graph.Graph) map[int]map[int]int {
 		neighbors := g.From(node)
 		for _, neighbor := range neighbors {
 			neighborMap[node.ID()][neighbor.ID()] = int(g.Edge(node, neighbor).Weight())
+			fmt.Printf("GNM: %d -> %d = %d\n", node.ID(), neighbor.ID(), neighborMap[node.ID()][neighbor.ID()])
 		}
 	}
+
+	fmt.Printf("GNM: Result: %v\n", neighborMap)
 
 	return neighborMap
 }
 
 // Reconstruct a graph from adjacency maps
 func GraphFromNeighborMap(adjmap map[int]map[int]int) graph.Graph {
+	fmt.Printf("GFNM: From %v\n", adjmap)
 	g := simple.NewUndirectedGraph(0.0, math.Inf(1))
 	for srcid, neighmap := range adjmap {
 		if !g.Has(simple.Node(srcid)) {
@@ -131,5 +137,6 @@ func GraphFromNeighborMap(adjmap map[int]map[int]int) graph.Graph {
 			g.SetEdge(simple.Edge{F: simple.Node(srcid), T: simple.Node(dstid), W: float64(cost)})
 		}
 	}
+	fmt.Printf("GFNM: Result: %v\n", g)
 	return g
 }

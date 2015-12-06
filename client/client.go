@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/Grissess/sdnd16/database"
 	"github.com/Grissess/sdnd16/utils"
-        "github.com/Grissess/sdnd16/algorithms"
-        "github.com/gonum/graph/path"
-        "github.com/fatih/color"
+    "github.com/Grissess/sdnd16/algorithms"
+    "github.com/gonum/graph/path"
+    "github.com/fatih/color"
 )
 
 func main() {
@@ -56,6 +56,10 @@ func main() {
 
                 db, DBerr = database.ConnectToDatabase(recordName, "tcp", ipAddress)
 
+				topo, TPerr := db.GetTopology()
+
+				fmt.Printf("CLI: gb.GetTopo[%v]: %v\n", TPerr, topo)
+
                 if DBerr != nil {
                         panic(DBerr)
                 }
@@ -72,7 +76,7 @@ func main() {
                 if input ==  "Y" || input == "y" {
                         color.Set(color.FgWhite)
                         fmt.Print("Give me the name of a topology file >> ")
-                        color.Unset() 
+                        color.Unset()
 
                         fmt.Scanln(&filename)
                         g, labels, Uerror := utils.ReadFileToGraph(filename)
@@ -97,7 +101,14 @@ func main() {
                                 realPathMap[k] = newMap
                         }
 
+						fmt.Printf("CLI: pathMap: %v\n", pathMap)
+						fmt.Printf("CLI: realPathMap: %v\n", realPathMap)
+
                         db, DBerr = database.NewRoutingDatabase(recordName, "tcp", ipAddress, revLabels, realPathMap, utils.GetNeighborMap(g))
+
+						topo, TPerr := db.GetTopology()
+
+						fmt.Printf("CLI: db.GetTopo[%v]: %v\n", TPerr, topo)
 
                          if DBerr != nil {
                                 panic(DBerr)

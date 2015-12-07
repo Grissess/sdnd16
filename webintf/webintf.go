@@ -4,6 +4,7 @@ import (
 	"os/exec"
 	"errors"
 	"io"
+	"math"
 	"fmt"
 	"strings"
 	"bytes"
@@ -13,6 +14,7 @@ import (
 	"github.com/Grissess/sdnd16/database"
 	"github.com/Grissess/sdnd16/utils"
 	"github.com/gonum/graph"
+	"github.com/gonum/graph/simple"
 	"github.com/gonum/graph/encoding/dot"
 )
 
@@ -27,6 +29,7 @@ var (
 	t_error = template.Must(template.ParseFiles(root + "error.gtpl"))
 	t_path = template.Must(template.ParseFiles(root + "path.gtpl"))
 	t_db = template.Must(template.ParseFiles(root + "db.gtpl"))
+	t_node = template.Must(template.ParseFiles(root + "node.gtpl"))
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -46,9 +49,6 @@ func view_search(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func view_node(w http.ResponseWriter, r *http.Request, dbname, node string) {
-	t_error.Execute(w, fmt.Sprintf("Not implemented; (%v %v)", dbname, node))
-}
 
 type tinPath struct {
 	Dbname string
@@ -79,6 +79,24 @@ func view_path(w http.ResponseWriter, r *http.Request, dbname, srcnode, dstnode 
 	err3 := t_path.Execute(w, tinPath{Dbname: dbname, Rawpath: path, Path: pathpart, Netpath: strings.Join(pathpart, "/"), Cost: cost})
 	if err3 != nil {
 		t_error.Execute(w, err3)
+	}
+}
+
+type tinNode struct {
+	Dbname string
+	Database database.RoutingDatabase
+	Node string
+}
+
+func view_node(w http.ResponseWriter, r *http.Request, dbname, src string) {
+	db, err1 := database.ConnectToDatabase(dbname, db_network, db_address)
+	if err1 != nil {
+		t_error.Execute(w, err1)
+		return
+	}
+	err2 := t_node.Execute(w, tinNode{Dbname: dbname, Database: db, Node: src})
+	if err2 != nil {
+		t_error.Execute(w, err2)
 	}
 }
 
@@ -116,29 +134,29 @@ func db_view(w http.ResponseWriter, r *http.Request) {
 	view_search(w, r)
 }
 
-func get_graph(w http.ResponseWriter, r *http.Request) (graph.Graph, error) {
+func get_graph(w http.ResponseWriter, r *http.Request) (graph.Graph, string, error) {
 	path := strings.Split(r.URL.Path, "/")
 	if len(path) < 4 {
 		t_error.Execute(w, "Not enough components in path")
-		return nil, errors.New("Not enough components in path")
+		return nil, "", errors.New("Not enough components in path")
 	}
 	dbname := path[3]
 	db, err1 := database.ConnectToDatabase(dbname, db_network, db_address)
 	if err1 != nil {
 		t_error.Execute(w, err1)
-		return nil, err1
+		return nil, "", err1
 	}
 	topo, err2 := db.GetTopology()
 	if err2 != nil {
 		t_error.Execute(w, err2)
-		return nil, err2
+		return nil, "", err2
 	}
 	fmt.Println("topo:")
 	fmt.Println(topo)
 	g := utils.GraphFromNeighborMap(topo)
 	fmt.Println("graph:")
 	fmt.Println(g)
-	return g, nil
+	return g, dbname, nil
 }
 
 func rend_path(w http.ResponseWriter, r *http.Request) {
@@ -179,16 +197,61 @@ func rend_path(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, dotout)
 }
 
-func rend_db(w http.ResponseWriter, r *http.Request) {
-	g, err1 := get_graph(w, r)
+type dbNodeGraph struct {
+	*simple.UndirectedGraph
+	dbName string
+}
+
+type dbNodeEdge struct {
+	simple.Edge
+}
+
+type dbNodeNode struct {
+	simple.Node
+	dbName string
+}
+
+func (self dbNodeEdge) DOTAttributes() []dot.Attribute {
+	return []dot.Attribute{
+		dot.Attribute{Key: "label", Value: fmt.Sprintf("%d", int(self.Weight()))},
+	}
+}
+
+func (self dbNodeNode) DOTAttributes() []dot.Attribute {
+	return []dot.Attribute{
+		dot.Attribute{Key: "href", Value: fmt.Sprintf("\"http://localhost:8080/db/%s/%d\"", self.dbName, self.ID())},
+		dot.Attribute{Key: "style", Value: "filled"},
+		dot.Attribute{Key: "fillcolor", Value: "\"#cccccc\""},
+	}
+}
+
+func (self dbNodeNode) ID() int {
+	return self.Node.ID()
+}
+
+func rend_node(w http.ResponseWriter, r *http.Request) {
+	g, n, err1 := get_graph(w, r)
 	if err1 != nil {
 		return  // Already rendered
 	}
-	data, err2 := dot.Marshal(g, "", "", "", false)
+	parts := strings.Split(r.URL.Path, "/")
+	srcid, err3 := strconv.Atoi(parts[4])
+	if err3 != nil {
+		t_error.Execute(w, err3)
+		return
+	}
+	ng := dbNodeGraph{UndirectedGraph: simple.NewUndirectedGraph(0, math.Inf(1)), dbName: n}
+	ng.AddNode(dbNodeNode{Node: simple.Node(srcid), dbName: n})
+	for _, dst := range(g.From(simple.Node(srcid))) {
+		ng.AddNode(dbNodeNode{Node: simple.Node(dst.ID()), dbName: n})
+		ng.SetEdge(dbNodeEdge{simple.Edge{F: simple.Node(srcid), T: simple.Node(dst.ID()), W: g.Edge(simple.Node(srcid), dst).Weight()}})
+	}
+	data, err2 := dot.Marshal(ng, "", "", "", false)
 	if err2 != nil {
 		t_error.Execute(w, err2)
 		return
 	}
+	fmt.Println(string(data))
 	buf := bytes.NewBuffer(data)
 	dotter := exec.Command("dot", "-Tsvg")
 	dotin, _ := dotter.StdinPipe()
@@ -200,8 +263,72 @@ func rend_db(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, dotout)
 }
 
-func rend_node(w http.ResponseWriter, r *http.Request) {
-	t_error.Execute(w, "Not yet implemented")
+type dbViewGraph struct {
+	 *simple.UndirectedGraph
+	 dbName string
+}
+
+type dbViewEdge struct {
+	simple.Edge
+}
+
+type dbViewNode struct {
+	simple.Node
+	dbName string
+}
+
+func (self dbViewGraph) Edge(u, v graph.Node) graph.Edge {
+	e := self.UndirectedGraph.Edge(u, v)
+	return dbViewEdge{e.(simple.Edge)}
+}
+
+func (self dbViewGraph) Nodes() []graph.Node {
+	nodes := self.UndirectedGraph.Nodes()
+	res := make([]graph.Node, len(nodes))
+	for idx, elem := range(nodes) {
+		res[idx] = dbViewNode{Node: elem.(simple.Node), dbName: self.dbName}
+	}
+	return res
+}
+
+func (self dbViewEdge) DOTAttributes() []dot.Attribute {
+	return []dot.Attribute{
+		dot.Attribute{Key: "label", Value: fmt.Sprintf("%d", int(self.Weight()))},
+	}
+}
+
+func (self dbViewNode) DOTAttributes() []dot.Attribute {
+	return []dot.Attribute{
+		dot.Attribute{Key: "href", Value: fmt.Sprintf("\"http://localhost:8080/db/%s/%d\"", self.dbName, self.ID())},
+		dot.Attribute{Key: "style", Value: "filled"},
+		dot.Attribute{Key: "fillcolor", Value: "\"#cccccc\""},
+	}
+}
+
+func (self dbViewNode) ID() int {
+	return self.Node.ID()
+}
+
+func rend_db(w http.ResponseWriter, r *http.Request) {
+	g, n, err1 := get_graph(w, r)
+	if err1 != nil {
+		return  // Already rendered
+	}
+	data, err2 := dot.Marshal(dbViewGraph{UndirectedGraph: g.(*simple.UndirectedGraph), dbName: n}, "", "", "", false)
+	if err2 != nil {
+		t_error.Execute(w, err2)
+		return
+	}
+	fmt.Println(string(data))
+	buf := bytes.NewBuffer(data)
+	dotter := exec.Command("dot", "-Tsvg")
+	dotin, _ := dotter.StdinPipe()
+	dotout, _ := dotter.StdoutPipe()
+	w.Header().Set("Content-type", "image/svg+xml")
+	dotter.Start()
+	io.Copy(dotin, buf)
+	dotin.Close()
+	io.Copy(w, dotout)
 }
 
 func main() {

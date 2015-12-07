@@ -109,17 +109,24 @@ func view_path(w http.ResponseWriter, r *http.Request, dbname, srcnode, dstnode 
 
 type tinNode struct {
 	Dbname string
-	Database database.RoutingDatabase
+	Database *database.RoutingDatabase
 	Node string
+	Labels map[int]string
+	Graph graph.Graph
 }
 
 func view_node(w http.ResponseWriter, r *http.Request, dbname, src string) {
-	db, err1 := database.ConnectToDatabase(dbname, db_network, db_address)
+	r.URL.Path = "///"+dbname  // XXX Hack
+	g, _, db, err1 := get_graph(w, r)
 	if err1 != nil {
-		t_error.Execute(w, err1)
+		return  // Already rendered
+	}
+	labels, err3 := db.GetLabels()
+	if err3 != nil {
+		t_error.Execute(w, err3)
 		return
 	}
-	err2 := t_node.Execute(w, tinNode{Dbname: dbname, Database: db, Node: src})
+	err2 := t_node.Execute(w, tinNode{Dbname: dbname, Database: db, Node: src, Labels: labels, Graph: g})
 	if err2 != nil {
 		t_error.Execute(w, err2)
 	}
@@ -253,7 +260,7 @@ func (self dbPathEdge) DOTAttributes() []dot.Attribute {
 
 func (self dbPathNode) DOTAttributes() []dot.Attribute {
 	return []dot.Attribute{
-		dot.Attribute{Key: "href", Value: fmt.Sprintf("\"http://localhost:8080/db/%s/%d/%d\"", self.dbName, self.first, self.ID())},
+		dot.Attribute{Key: "href", Value: fmt.Sprintf("\"/db/%s/%d/%d\"", self.dbName, self.first, self.ID())},
 		dot.Attribute{Key: "style", Value: "filled"},
 		dot.Attribute{Key: "fillcolor", Value: fmt.Sprintf("\"%s\"", self.color)},
 		dot.Attribute{Key: "label", Value: fmt.Sprintf("\"%s\"", self.label)},
@@ -344,7 +351,7 @@ func (self dbNodeEdge) DOTAttributes() []dot.Attribute {
 
 func (self dbNodeNode) DOTAttributes() []dot.Attribute {
 	return []dot.Attribute{
-		dot.Attribute{Key: "href", Value: fmt.Sprintf("\"http://localhost:8080/db/%s/%d\"", self.dbName, self.ID())},
+		dot.Attribute{Key: "href", Value: fmt.Sprintf("\"/db/%s/%d\"", self.dbName, self.ID())},
 		dot.Attribute{Key: "style", Value: "filled"},
 		dot.Attribute{Key: "fillcolor", Value: "\"#cccccc\""},
 		dot.Attribute{Key: "label", Value: fmt.Sprintf("\"%s\"", self.label)},
@@ -431,7 +438,7 @@ func (self dbViewEdge) DOTAttributes() []dot.Attribute {
 
 func (self dbViewNode) DOTAttributes() []dot.Attribute {
 	return []dot.Attribute{
-		dot.Attribute{Key: "href", Value: fmt.Sprintf("\"http://localhost:8080/db/%s/%d\"", self.dbName, self.ID())},
+		dot.Attribute{Key: "href", Value: fmt.Sprintf("\"/db/%s/%d\"", self.dbName, self.ID())},
 		dot.Attribute{Key: "style", Value: "filled"},
 		dot.Attribute{Key: "fillcolor", Value: "\"#cccccc\""},
 		dot.Attribute{Key: "label", Value: fmt.Sprintf("\"%s\"", self.label)},

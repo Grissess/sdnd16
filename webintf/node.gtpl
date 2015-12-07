@@ -6,6 +6,15 @@
 		<h1>Network Analysis - Node</h1>
 		<p>Database: {{.Dbname}}</p>
 		<p>Node: {{.Node}}</p>
+		<p>Render path to:</p>
+		<ul>
+			{{ $dbname := .Dbname }}
+			{{ $node := .Node }}
+			{{ $labels := .Labels }}
+			{{ range .Graph.Nodes }}
+				<li><a href="/db/{{$dbname}}/{{$node}}/{{.ID}}">{{index $labels .ID}}</a></li>
+			{{ end }}
+		</ul>
 		<div id="replnode"></div>
 		<script type="text/javascript">
 xhrnode = new XMLHttpRequest();

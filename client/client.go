@@ -59,7 +59,7 @@ func main() {
 
 				topo, TPerr := db.GetTopology()
 
-				fmt.Printf("CLI: gb.GetTopo[%v]: %v\n", TPerr, topo)
+				//fmt.Printf("CLI: gb.GetTopo[%v]: %v\n", TPerr, topo)
 
                 if DBerr != nil {
                         panic(DBerr)
@@ -102,14 +102,14 @@ func main() {
                                 realPathMap[k] = newMap
                         }
 
-						fmt.Printf("CLI: pathMap: %v\n", pathMap)
-						fmt.Printf("CLI: realPathMap: %v\n", realPathMap)
+						//fmt.Printf("CLI: pathMap: %v\n", pathMap)
+						//fmt.Printf("CLI: realPathMap: %v\n", realPathMap)
 
                         db, DBerr = database.NewRoutingDatabase(recordName, "tcp", ipAddress, revLabels, realPathMap, utils.GetNeighborMap(g))
 
 						topo, TPerr := db.GetTopology()
 
-						fmt.Printf("CLI: db.GetTopo[%v]: %v\n", TPerr, topo)
+						//fmt.Printf("CLI: db.GetTopo[%v]: %v\n", TPerr, topo)
 
                          if DBerr != nil {
                                 panic(DBerr)

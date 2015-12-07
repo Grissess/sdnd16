@@ -183,11 +183,11 @@ func get_graph(w http.ResponseWriter, r *http.Request) (graph.Graph, string, *da
 		t_error.Execute(w, err2)
 		return nil, "", &db, err2
 	}
-	fmt.Println("topo:")
-	fmt.Println(topo)
+	//fmt.Println("topo:")
+	//fmt.Println(topo)
 	g := utils.GraphFromNeighborMap(topo)
-	fmt.Println("graph:")
-	fmt.Println(g)
+	//fmt.Println("graph:")
+	//fmt.Println(g)
 	return g, dbname, &db, nil
 }
 
@@ -298,8 +298,8 @@ func rend_path(w http.ResponseWriter, r *http.Request) {
 	last := pathslice[len(pathslice) - 1]
 	ng := dbPathGraph{UndirectedGraph: g.(*simple.UndirectedGraph), dbName: n, labels: labels, pathnodes: pathnodes, pathslice: pathslice, first: first, last: last}
 	data, err2 := dot.Marshal(ng, "", "", "", false)
-	fmt.Println("dot:")
-	fmt.Println(string(data))
+	//fmt.Println("dot:")
+	//fmt.Println(string(data))
 	if err2 != nil {
 		t_error.Execute(w, err2)
 		return
@@ -388,7 +388,7 @@ func rend_node(w http.ResponseWriter, r *http.Request) {
 		t_error.Execute(w, err2)
 		return
 	}
-	fmt.Println(string(data))
+	//fmt.Println(string(data))
 	buf := bytes.NewBuffer(data)
 	dotter := exec.Command("dot", "-Tsvg")
 	dotin, _ := dotter.StdinPipe()
@@ -464,7 +464,7 @@ func rend_db(w http.ResponseWriter, r *http.Request) {
 		t_error.Execute(w, err2)
 		return
 	}
-	fmt.Println(string(data))
+	//fmt.Println(string(data))
 	buf := bytes.NewBuffer(data)
 	dotter := exec.Command("dot", "-Tsvg")
 	dotin, _ := dotter.StdinPipe()

@@ -235,6 +235,19 @@ func (self *RoutingDatabase) getLabels() error {
 	return nil
 }
 
+// Get the labels from the connected database and return them
+func (self *RoutingDatabase) GetLabels() (map[int]string, error) {
+    labels := make(map[int]string, self.size)
+	for i := 0; i < self.size; i++ {
+        nodeLabel, err := redis.String(self.connection.Do("HGET", self.name, fmt.Sprintf("{%d}", i)))
+		if err != nil {
+			return labels, err
+		}
+		labels[i] = nodeLabel
+	}
+	return labels, nil
+}
+
 // Set all of the label information for a topology in the database, again private for making new topologies
 func (self *RoutingDatabase) setLabels() error {
 	self.connection.Do("HSET", self.name, "{size}", fmt.Sprintf("%d", len(self.labels)))

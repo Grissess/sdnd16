@@ -4,9 +4,20 @@
 	</head>
 	<body>
 		<h1>Network Analysis - Path</h1>
-		<p>Raw result: {{.Rawpath}}</p>
-		<p>Full path: {{range .Path}}{{.}} -> {{end}}</p>
+		<p>Full path: {{.Fullpath}}</p>
 		<p>Cost: {{.Cost}}</p>
-		<img src="/render/path/{{.Dbname}}/{{.Netpath}}" alt="SVG path"/>
+		<div id="replpath"></div>
+		<script type="text/javascript">
+xhrpath = new XMLHttpRequest();
+xhrpath.onreadystatechange = function() { if(xhrpath.readyState == 4) {
+	if(xhrpath.status == 200) {
+		document.querySelector("#replpath").innerHTML = xhrpath.responseText;
+	} else {
+		document.querySelector("#replpath").innerHTML = '<p style="color:red">' + xhrpath.statusText + "</p>";
+	}
+}};
+xhrpath.open("GET", "/render/path/{{.Dbname}}/{{.Netpath}}", true);
+xhrpath.send();
+		</script>
 	</body>
 </html>
